@@ -1,8 +1,8 @@
 from scrapping.scrapper import NewsScraper
 from scrapping.youtube_scraper import YoutubeScraper
 from scrapping.twitter_scraper import TwitterScraper
-from preprocessor import DataCleaner
-from database_supabase import SentimentDatabase
+from core.preprocessor import DataCleaner
+from database.database_supabase import SentimentDatabase
 from transformers import pipeline
 from scrapping.tiktok_scraper import TiktokScrapper
 
@@ -26,7 +26,7 @@ class sentimentAnalyzer:
         # data collect
         news_data = self.news_scraper.fetch_news(keyword)
         tiktok_data = self.tiktok_scraper.fetch_tiktok(keyword)
-        yt_data = self.youtube_scraper.search_and_fetch(keyword, max_videos=5)
+        yt_data = self.youtube_scraper.search_and_fetch(keyword, max_videos=30)
         tweets_res = self.twitter_scraper.fetch_tweets(keyword, limit=50)
         tweets_data = tweets_res.get('tweets', [])
 
@@ -51,12 +51,12 @@ class sentimentAnalyzer:
                     'author': screen_name
                 })
         for t in tiktok_data:
-            text = t.get('title') or t.get('description')
+            text = t.get('text')
             if text:
                 all_raw_data.append({
                     'text': text,
                     'platform': 'TikTok',
-                    'author': t.get('author', {}).get('nickname', 'User TikTok')
+                    'author': t.get('author', 'User Tiktok')
                 })
         print(f"collect successfully: {len(all_raw_data)} from 3 platforms")
 
@@ -82,11 +82,3 @@ class sentimentAnalyzer:
             }
             self.db.save_results(data_supabase)
         print(f"all data processed and save to database ready to display the keyword: {keyword}")
-
-if __name__ == "__main__":
-    system = sentimentAnalyzer()
-    target = input("masukan keyword : ")
-    system.run_all(target)
-
-
-

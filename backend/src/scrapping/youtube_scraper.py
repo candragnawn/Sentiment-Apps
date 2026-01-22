@@ -1,7 +1,7 @@
 import yt_dlp
 
 class YoutubeScraper:
-    def search_and_fetch(self, keyword, max_videos=50):
+    def search_and_fetch(self, keyword, max_videos = 20):
         print(f"Mencari video YouTube untuk: {keyword}")
         
         ydl_opts = {
