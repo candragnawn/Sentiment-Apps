@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/src/app/dashboard/components/app-sidebar";
 import { SiteHeader } from "@/src/app/dashboard/components/site-header";
+import { ThemeProvider } from "@/src/app/dashboard/components/theme-provider";
 import {
   SidebarInset,
   SidebarProvider,
