@@ -17,7 +17,7 @@ app.add_middleware(
 )
 analyzer =sentimentAnalyzer()
 
-@app.get('api/sentiment/stats')
+@app.get('/api/sentiment/stats')
 async def get_stats():
     return {
         "Total_Mention",
