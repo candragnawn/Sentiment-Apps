@@ -5,9 +5,11 @@ import { ChartAreaInteractive } from "./components/chart-area-interactive";
 import { DataTable } from "./components/data-table";
 import { SectionCards } from "@/src/app/dashboard/components/section-cards";
 import { InputInline } from "@/src/app/dashboard/components/search";
+import { HeroSection } from "./components/hero-section";
 
 export default function DashboardPage() {
   const [rawData, setRawData] = useState<any[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -24,6 +26,10 @@ export default function DashboardPage() {
   };
   useEffect(() => {
     loadData();
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const stats = {
@@ -48,7 +54,7 @@ export default function DashboardPage() {
 
           <div className="mt-6">
             <ChartAreaInteractive data={rawData} />
-          </div>
+      
 
           <div className="mt-6">
             <DataTable data={rawData} />

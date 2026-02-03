@@ -9,6 +9,8 @@ export function InputInline() {
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
+    await fetch(`http://127.0.0.1:8000/analyze?keyword=${keyword}`);
+    
     setLoading(true);
     try {
       const response = await fetch(
@@ -24,14 +26,17 @@ export function InputInline() {
   };
   return (
     <Field orientation="horizontal">
-        <Input className="p-4"
-          type="search"
-          placeholder="Search Keyword..."
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)} className="bg-black border-zinc-700 text-white"
-        />
-        <Button onClick={handleSearch} disabled={loading}>{loading ? "Processing..." : "Search"}</Button>
-      </Field>
-    
+      <Input
+        className="p-4"
+        type="search"
+        placeholder="Search Keyword..."
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+        className="bg-black border-zinc-700 text-white"
+      />
+      <Button onClick={handleSearch} disabled={loading}>
+        {loading ? "Processing..." : "Search"}
+      </Button>
+    </Field>
   );
 }
