@@ -2,10 +2,12 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from core.analyzer import sentimentAnalyzer
+from database.database_supabase import SentimentDatabase
 import uvicorn
 from typing import List
 
 app = FastAPI(title="Sentiment Analysis API")
+db = SentimentDatabase()
 
 origins = ["http://localhost:3000"]
 
@@ -17,17 +19,11 @@ app.add_middleware(
 )
 analyzer =sentimentAnalyzer()
 
-@app.get('/api/sentiment/stats')
+@app.get('/api/sentiment/list')
 async def get_stats():
-    return {
-        "Total_Mention",
-        "Positive",
-        "Negative",
-        "Neutral",
-
-
-        
-    }
+  
+       data = db.fetch_all_data()
+       return data
 
 @app.get("/")
 def read_root():
