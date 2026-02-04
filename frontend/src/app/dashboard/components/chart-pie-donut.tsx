@@ -41,7 +41,24 @@ const chartConfig = {
   neutral: {
     label: "Neutral",
     color: "hsl(var(--chart-3))",
+  },
+  news: {
+    label: "News",
+    color: "hsl(var(--chart-4))",
+  },
+  twitter: {
+    label: "Twitter",
+    color: "hsl(var(--chart-5))",
+  },
+  tiktok: {
+    label: "Tiktok",
+    color: "hsl(var(--chart-6))",
+  },
+  youtube: {
+    label: "Youtube",
+    color: "hsl(var(--chart-7))",
   }
+   
 } satisfies ChartConfig
 
 export function ChartPieDonut({title, description, chartData}: any) {

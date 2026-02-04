@@ -44,6 +44,13 @@ export default function HomePage() {
     Tiktok: rawData.filter((item:any)=> item.platform === "Tiktok").length,
     Youtube: rawData.filter((item:any)=> item.platform === "Youtube").length,
   }
+   const PlatformDistribution = [
+    { label: "News", value: platform.News, fill: "var(--color-news)" },
+    { label: "Twitter", value: platform.Twitter, fill: "var(--color-twitter)"},
+    { label: "Tiktok", value: platform.Tiktok, fill: "var(--color-tiktok)"},
+    { label: "Youtube", value: platform.Youtube, fill: "var(--color-youtube)"},
+
+  ]
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
@@ -79,7 +86,15 @@ export default function HomePage() {
         <div className="md:col-span-4">
           <ChartPieDonut 
              title="Distribution platform"
-            description="Distribusi Sentiment"/>
+            description="Distribusi Platform"
+            chartData={[
+              { label: "News", value: platform.News, fill: "var(--color-news)" },
+              { label: "Twitter", value: platform.Twitter, fill: "var(--color-twitter)"},
+              { label: "Tiktok", value: platform.Tiktok, fill: "var(--color-tiktok)"},
+              { label: "Youtube", value: platform.Youtube, fill: "var(--color-youtube)"},
+            ]}
+            />
+            
         </div>
       </div>
 

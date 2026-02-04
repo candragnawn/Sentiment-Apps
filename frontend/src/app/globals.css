@@ -67,6 +67,8 @@
   --chart-3: 215 90% 50%; /* Biru Utama (Primary Blue) */
   --chart-4: 217 85% 40%; /* Biru Sedang (Medium Blue) */
   --chart-5: 221 80% 30%;
+  --chart-6: 225 75% 25%;
+  --chart-7: 230 70% 20%;
 }
 
 .dark {
@@ -101,6 +103,8 @@
   --chart-3: 215 90% 50%;
   --chart-4: 217 85% 40%;
   --chart-5: 221 80% 30%;
+  --chart-6: 225 75% 25%;
+  --chart-7: 230 70% 20%;
 }
 
 @layer base {
