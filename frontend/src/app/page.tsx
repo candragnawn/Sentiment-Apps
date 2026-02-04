@@ -29,28 +29,44 @@ export default function HomePage() {
     positive: rawData.filter((item: any) => item.label === "positive").length,
     negative: rawData.filter((item: any) => item.label === "negative").length,
     neutral: rawData.filter((item: any) => item.label === "neutral").length,
-
   };
 
+  const positivePercent = stats.total > 0 ? ((stats.positive / stats.total) * 100).toFixed(1) : 0;
+  const negativePercent = stats.total > 0 ? ((stats.negative / stats.total) * 100).toFixed(1) : 0;
+
+  const sentimentSummary = stats.positive > stats.negative
+  ? `Dominan sentimen positif (${positivePercent}%)`
+  : `Dominan sentimen negatif (${negativePercent}%)`;
+
   const SentimentDistribution = [
-    { label: "positive", value: stats.positive,fill: "var(--color-positive)" },
-    { label: "negative", value: stats.negative, fill: "var(--color-negative)"},
-    { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)"},
-
-  ]
+    { label: "positive", value: stats.positive, fill: "var(--color-positive)" },
+    { label: "negative", value: stats.negative, fill: "var(--color-negative)" },
+    { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)" },
+  ];
   const platform = {
-    News: rawData.filter((item:any)=> item.platform === "News").length,
-    Twitter: rawData.filter((item:any)=> item.platform === "Twitter").length,
-    Tiktok: rawData.filter((item:any)=> item.platform === "Tiktok").length,
-    Youtube: rawData.filter((item:any)=> item.platform === "Youtube").length,
-  }
-   const PlatformDistribution = [
+    News: rawData.filter(
+      (item: any) =>
+        item.platform && item.platform.toString().toLowerCase() === "news",
+    ).length,
+    Twitter: rawData.filter(
+      (item: any) =>
+        item.platform && item.platform.toString().toLowerCase() === "twitter",
+    ).length,
+    Tiktok: rawData.filter(
+      (item: any) =>
+        item.platform && item.platform.toString().toLowerCase() === "tiktok",
+    ).length,
+    Youtube: rawData.filter(
+      (item: any) =>
+        item.platform && item.platform.toString().toLowerCase() === "youtube",
+    ).length,
+  };
+  const PlatformDistribution = [
     { label: "News", value: platform.News, fill: "var(--color-news)" },
-    { label: "Twitter", value: platform.Twitter, fill: "var(--color-twitter)"},
-    { label: "Tiktok", value: platform.Tiktok, fill: "var(--color-tiktok)"},
-    { label: "Youtube", value: platform.Youtube, fill: "var(--color-youtube)"},
-
-  ]
+    { label: "Twitter", value: platform.Twitter, fill: "var(--color-twitter)" },
+    { label: "Tiktok", value: platform.Tiktok, fill: "var(--color-tiktok)" },
+    { label: "Youtube", value: platform.Youtube, fill: "var(--color-youtube)" },
+  ];
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
@@ -70,6 +86,7 @@ export default function HomePage() {
           <ChartPieDonut
             title="Distribution Label"
             description="Distribusi Sentiment"
+            footer={sentimentSummary}
             chartData={SentimentDistribution}
           />
         </div>
@@ -84,17 +101,11 @@ export default function HomePage() {
           <ChartAreaInteractive data={rawData} />
         </div>
         <div className="md:col-span-4">
-          <ChartPieDonut 
-             title="Distribution platform"
+          <ChartPieDonut
+            title="Distribution platform"
             description="Distribusi Platform"
-            chartData={[
-              { label: "News", value: platform.News, fill: "var(--color-news)" },
-              { label: "Twitter", value: platform.Twitter, fill: "var(--color-twitter)"},
-              { label: "Tiktok", value: platform.Tiktok, fill: "var(--color-tiktok)"},
-              { label: "Youtube", value: platform.Youtube, fill: "var(--color-youtube)"},
-            ]}
-            />
-            
+            chartData={PlatformDistribution}
+          />
         </div>
       </div>
 
