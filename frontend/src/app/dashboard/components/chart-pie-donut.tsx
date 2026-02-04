@@ -17,6 +17,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/src/app/dashboard/components/ui/chart"
+import { positive } from "zod"
 
 export const description = "A donut chart"
 
@@ -29,37 +30,26 @@ const chartData = [
 ]
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
+  positive: {
+    label: "Positive",
+    color: "hsl(var(--chart-1))",
   },
-  chrome: {
-    label: "Chrome",
-    color: "var(--chart-1)",
+  negative: {
+    label: "Negative",
+    color: "hsl(var(--chart-2))",
   },
-  safari: {
-    label: "Safari",
-    color: "var(--chart-2)",
-  },
-  firefox: {
-    label: "Firefox",
-    color: "var(--chart-3)",
-  },
-  edge: {
-    label: "Edge",
-    color: "var(--chart-4)",
-  },
-  other: {
-    label: "Other",
-    color: "var(--chart-5)",
-  },
+  neutral: {
+    label: "Neutral",
+    color: "hsl(var(--chart-3))",
+  }
 } satisfies ChartConfig
 
-export function ChartPieDonut() {
+export function ChartPieDonut({title, description, chartData}: any) {
   return (
-    <Card className="flex flex-col w-full">
+    <Card className="flex flex-col w-full ">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Pie Chart - Donut</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer
@@ -73,9 +63,9 @@ export function ChartPieDonut() {
             />
             <Pie
               data={chartData}
-              dataKey="visitors"
-              nameKey="browser"
-              innerRadius={60}
+              dataKey="value"
+              nameKey="label"
+              innerRadius={80}
             />
           </PieChart>
         </ChartContainer>

@@ -35,7 +35,7 @@ import {
 
 const data = {
   user: {
-    name: "shadcn",
+    name: "Pakelpo",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
@@ -45,11 +45,7 @@ const data = {
       url: "#",
       icon: LayoutDashboardIcon,
     },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: ListIcon,
-    },
+    
     {
       title: "Analytics",
       url: "#",

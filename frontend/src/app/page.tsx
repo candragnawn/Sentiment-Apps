@@ -29,7 +29,21 @@ export default function HomePage() {
     positive: rawData.filter((item: any) => item.label === "positive").length,
     negative: rawData.filter((item: any) => item.label === "negative").length,
     neutral: rawData.filter((item: any) => item.label === "neutral").length,
+
   };
+
+  const SentimentDistribution = [
+    { label: "positive", value: stats.positive,fill: "var(--color-positive)" },
+    { label: "negative", value: stats.negative, fill: "var(--color-negative)"},
+    { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)"},
+
+  ]
+  const platform = {
+    News: rawData.filter((item:any)=> item.platform === "News").length,
+    Twitter: rawData.filter((item:any)=> item.platform === "Twitter").length,
+    Tiktok: rawData.filter((item:any)=> item.platform === "Tiktok").length,
+    Youtube: rawData.filter((item:any)=> item.platform === "Youtube").length,
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
@@ -46,11 +60,26 @@ export default function HomePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-4">
-          <ChartPieDonut />
+          <ChartPieDonut
+            title="Distribution Label"
+            description="Distribusi Sentiment"
+            chartData={SentimentDistribution}
+          />
         </div>
 
         <div className="md:col-span-8">
           <ChartAreaInteractive data={rawData} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-8">
+          <ChartAreaInteractive data={rawData} />
+        </div>
+        <div className="md:col-span-4">
+          <ChartPieDonut 
+             title="Distribution platform"
+            description="Distribusi Sentiment"/>
         </div>
       </div>
 

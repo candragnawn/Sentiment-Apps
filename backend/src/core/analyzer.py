@@ -23,7 +23,7 @@ class sentimentAnalyzer:
     def run_all(self, keyword):
         self.db.hapus_semua_data()
         print(f"start operating for keyword: {keyword}")
-        # data collect
+     
         news_data = self.news_scraper.fetch_news(keyword)
         tiktok_data = self.tiktok_scraper.fetch_tiktok(keyword)
         yt_data = self.youtube_scraper.search_and_fetch(keyword, max_videos=30)
