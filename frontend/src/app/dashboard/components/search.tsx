@@ -32,7 +32,7 @@ export function InputInline() {
         placeholder="Search Keyword..."
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
-        className="bg-black border-zinc-700 text-white"
+        className="bg-transparent border border-border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <Button onClick={handleSearch} disabled={loading}>
         {loading ? "Processing..." : "Search"}

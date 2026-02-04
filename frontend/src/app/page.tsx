@@ -6,6 +6,7 @@ import { ChartAreaInteractive } from "@/src/app/dashboard/components/chart-area-
 import { DataTable } from "@/src/app/dashboard/components/data-table";
 import { ChartLineInteractive } from "./dashboard/components/chart-line-interactive";
 import { ChartPieDonut } from "./dashboard/components/chart-pie-donut";
+import { WordCloudCard } from "./dashboard/components/world-cloud";
 
 export default function HomePage() {
   const [rawData, setRawData] = useState<any[]>([]);
@@ -31,12 +32,15 @@ export default function HomePage() {
     neutral: rawData.filter((item: any) => item.label === "neutral").length,
   };
 
-  const positivePercent = stats.total > 0 ? ((stats.positive / stats.total) * 100).toFixed(1) : 0;
-  const negativePercent = stats.total > 0 ? ((stats.negative / stats.total) * 100).toFixed(1) : 0;
+  const positivePercent =
+    stats.total > 0 ? ((stats.positive / stats.total) * 100).toFixed(1) : 0;
+  const negativePercent =
+    stats.total > 0 ? ((stats.negative / stats.total) * 100).toFixed(1) : 0;
 
-  const sentimentSummary = stats.positive > stats.negative
-  ? `Dominan sentimen positif (${positivePercent}%)`
-  : `Dominan sentimen negatif (${negativePercent}%)`;
+  const sentimentSummary =
+    stats.positive > stats.negative
+      ? `Dominan sentimen positif (${positivePercent}%)`
+      : `Dominan sentimen negatif (${negativePercent}%)`;
 
   const SentimentDistribution = [
     { label: "positive", value: stats.positive, fill: "var(--color-positive)" },
@@ -67,6 +71,17 @@ export default function HomePage() {
     { label: "Tiktok", value: platform.Tiktok, fill: "var(--color-tiktok)" },
     { label: "Youtube", value: platform.Youtube, fill: "var(--color-youtube)" },
   ];
+  const wordCloudData = rawData.reduce((acc: any[], item: any) => {
+    item.top_keyword?.forEach((word: string) => {
+      const existing = acc.find((w) => w.text === word);
+      if (existing) {
+        existing.value += 1;
+      } else {
+        acc.push({ text: word, value: 1 });
+      }
+    });
+    return acc;
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
@@ -85,7 +100,7 @@ export default function HomePage() {
         <div className="md:col-span-4">
           <ChartPieDonut
             title="Distribution Label"
-            description="Distribusi Sentiment"
+            description="Distribusi Sentiment hari ini"
             footer={sentimentSummary}
             chartData={SentimentDistribution}
           />
@@ -98,7 +113,8 @@ export default function HomePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8">
-          <ChartAreaInteractive data={rawData} />
+          {" "}
+          <WordCloudCard data={wordCloudData} />
         </div>
         <div className="md:col-span-4">
           <ChartPieDonut
@@ -114,6 +130,7 @@ export default function HomePage() {
         <div className="w-full">
           <ChartLineInteractive data={rawData} />
         </div>
+        <div className="  "></div>
       </div>
     </div>
   );

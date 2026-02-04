@@ -59,6 +59,7 @@ export default function DashboardPage() {
           <div className="mt-6">
             <DataTable data={rawData} />
           </div>
+          </div>
         </div>
       </div>
     </div>

@@ -82,12 +82,12 @@ export function ChartPieDonut({title, description, chartData, footer}: any) {
               data={chartData}
               dataKey="value" 
               nameKey="label"
-              innerRadius={80}
+              innerRadius={75}
             />
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
+      <CardFooter className="flex-col gap-2 text-lg">
         {footer}
       </CardFooter>
     </Card>
