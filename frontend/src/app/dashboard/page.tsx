@@ -1,50 +1,69 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { ChartAreaInteractive } from "@/src/components/chart-area-interactive";
-import { DataTable } from "@/src/components/data-table";
 import { SectionCards } from "@/src/components/section-cards";
 import { InputInline } from "@/src/components/search";
 import { HeroSection } from "@/src/components/hero-section";
 import { Toaster, toast } from "sonner";
 
+const ChartAreaInteractive = dynamic(() => import("@/src/components/chart-area-interactive").then(mod => mod.ChartAreaInteractive), { ssr: false });
+const DataTable = dynamic(() => import("@/src/components/data-table").then(mod => mod.DataTable), { ssr: false });
+
+
 export default function DashboardPage() {
   const [rawData, setRawData] = useState<any[]>([]);
+  const [stats, setStats] = useState({ total: 0, positive: 0, negative: 0, neutral: 0 });
+  const [chartData, setChartData] = useState<any[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [latestResult, setLatestResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const loadData = async () => {
+  const loadAllData = async () => {
+    setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/sentiment/list");
-      const json = await response.json();
-      const cleanedData = Array.isArray(json) ? json : json.data || [];
-      setRawData(cleanedData);
-      if (cleanedData.length > 0) {
-        setLatestResult(cleanedData[0]);
-      }
+      const statsRes = await fetch("http://127.0.0.1:8000/api/sentiment/stats");
+      const statsJson = await statsRes.json();
+      setStats(statsJson);
+
+      const chartRes = await fetch("http://127.0.0.1:8000/api/sentiment/chart?days=30");
+      const chartJson = await chartRes.json();
+      setChartData(chartJson);
+
+      const listRes = await fetch(`http://127.0.0.1:8000/api/sentiment/list?days=30`);
+      const listJson = await listRes.json();
+      const rawRes = Array.isArray(listJson) ? listJson : listJson.data || [];
+      
+      const transformed = rawRes.map((item: any) => ({
+        id: item.id,
+        header: item.text_raw?.substring(0, 100) || item.keyword,
+        type: `${item.author} (${item.platform})`,
+        status: item.label === 'positive' ? 'Done' : 'In Progress',
+        target: `${item.label} (${item.score}%)`,
+        limit: item.published_date ? new Date(item.published_date).toLocaleDateString() : 'No Date',
+        reviewer: item.keyword
+      }));
+
+      setRawData(transformed);
     } catch (error) {
       console.error("Failed to load data", error);
     } finally {
+      setLoading(false);
     }
   };
+
   useEffect(() => {
-    loadData();
+    loadAllData();
     const interval = setInterval(() => {
-      loadData();
-    }, 5000);
+      loadAllData();
+    }, 15000); 
     return () => clearInterval(interval);
   }, []);
 
-  const stats = {
-    total: rawData.length,
-    positive: rawData.filter((item: any) => item.label === "positive").length,
-    negative: rawData.filter((item: any) => item.label === "negative").length,
-    neutral: rawData.filter((item: any) => item.label === "neutral").length,
-  };
 
   const handleAnalyzeComplete = async () => {
-    await loadData();
+    await loadAllData();
     setIsAnalyzing(false);
     toast.success("analisis complete", {
       description: "new data has been analyzed successfully",
@@ -71,7 +90,7 @@ export default function DashboardPage() {
             neutral={stats.neutral}
           />
           <div className="mt-6">
-            <ChartAreaInteractive data={rawData} />
+            <ChartAreaInteractive data={chartData} />
 
             <div className="mt-6">
               <DataTable data={rawData} />
@@ -81,4 +100,5 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+
 }

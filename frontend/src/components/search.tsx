@@ -5,7 +5,7 @@ import { Field } from "@/src/components/ui/field";
 import { Input } from "@/src/components/ui/input";
 interface InputInlineProps {
   onStart?: () => void;
-  onComplete: () => void;
+  onComplete?: () => void;
 }
 
 export function InputInline({ onStart, onComplete }: InputInlineProps) {
@@ -13,8 +13,7 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
-    if (!keyword) return;
-    await fetch(`http://127.0.0.1:8000/analyze?keyword=${keyword}`);
+    if (!keyword || loading) return;
 
     setLoading(true);
     onStart?.();
@@ -25,16 +24,15 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
       if (response.ok) {
         setTimeout(() => {
           setLoading(false);
-          onComplete();
-        }, 8000);
+          onComplete?.();
+        }, 2000);
       } else {
-        setLoading(false);
-        onComplete();
+        throw new Error("Server error");
       }
     } catch (error) {
       console.error("gagal memulai analisis", error);
       setLoading(false);
-      onComplete();
+      onComplete?.();
     }
   };
   return (
@@ -46,7 +44,11 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
         onChange={(e) => setKeyword(e.target.value)}
         className="bg-transparent border border-border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-ring min-w-[300px]"
       />
-      <Button onClick={handleSearch} disabled={loading} className="cursor-pointer">
+      <Button
+        onClick={handleSearch}
+        disabled={loading}
+        className="cursor-pointer"
+      >
         {loading ? "Processing..." : "Search"}
       </Button>
     </Field>

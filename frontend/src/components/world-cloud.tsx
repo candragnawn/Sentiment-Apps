@@ -23,8 +23,8 @@ export function WordCloudCard({
       <CardContent>
         <WorldCloud
           data={data}
-          width={1800}
-          height={400}
+          width={3000}
+          height={700}
           font="inter"
           fontWeight="bold"
           fontSize={(word) => Math.log2(word.value + 1) * 20}

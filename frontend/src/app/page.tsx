@@ -1,36 +1,71 @@
 "use client";
+import { useMemo, useState, useEffect, useCallback } from "react";
 
-import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { SectionCards } from "@/src/components/section-cards";
-import { ChartAreaInteractive } from "@/src//components/chart-area-interactive";
-import { DataTable } from "@/src//components/data-table";
-import { ChartLineInteractive } from "@/src//components/chart-line-interactive";
-import { ChartPieDonut } from "@/src//components/chart-pie-donut";
-import { WordCloudCard } from "@/src/components/world-cloud";
+import { InputInline } from "@/src/components/search";
+
+const ChartAreaInteractive = dynamic(
+  () =>
+    import("@/src/components/chart-area-interactive").then(
+      (mod) => mod.ChartAreaInteractive,
+    ),
+  { ssr: false },
+);
+const DataTable = dynamic(
+  () => import("@/src/components/data-table").then((mod) => mod.DataTable),
+  { ssr: false },
+);
+const ChartLineInteractive = dynamic(
+  () =>
+    import("@/src/components/chart-line-interactive").then(
+      (mod) => mod.ChartLineInteractive,
+    ),
+  { ssr: false },
+);
+const ChartPieDonut = dynamic(
+  () =>
+    import("@/src/components/chart-pie-donut").then((mod) => mod.ChartPieDonut),
+  { ssr: false },
+);
+const WordCloudCard = dynamic(
+  () => import("@/src/components/world-cloud").then((mod) => mod.WordCloudCard),
+  { ssr: false },
+);
+const ChartPieLegend = dynamic(
+  () =>
+    import("../components/chart-pie-legend").then((mod) => mod.ChartPieLegend),
+  { ssr: false },
+);
 
 export default function HomePage() {
   const [rawData, setRawData] = useState<any[]>([]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/sentiment/list");
+      const response = await fetch("http://127.0.0.1:8000/api/sentiment/list", {
+        cache: "no-store",
+      });
       const json = await response.json();
       setRawData(Array.isArray(json) ? json : json.data || []);
     } catch (error) {
       console.error("Failed to load data", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const stats = {
-    total: rawData.length,
-    positive: rawData.filter((item: any) => item.label === "positive").length,
-    negative: rawData.filter((item: any) => item.label === "negative").length,
-    neutral: rawData.filter((item: any) => item.label === "neutral").length,
-  };
+  const stats = useMemo(
+    () => ({
+      total: rawData.length,
+      positive: rawData.filter((item: any) => item.label === "positive").length,
+      negative: rawData.filter((item: any) => item.label === "negative").length,
+      neutral: rawData.filter((item: any) => item.label === "neutral").length,
+    }),
+    [rawData],
+  );
 
   const positivePercent =
     stats.total > 0 ? ((stats.positive / stats.total) * 100).toFixed(1) : 0;
@@ -41,8 +76,16 @@ export default function HomePage() {
     stats.positive > stats.negative
       ? `Dominan sentimen positif (${positivePercent}%)`
       : `Dominan sentimen negatif (${negativePercent}%)`;
+  const summary = useMemo(() => {
+    if (stats.total === 0) return "Menunggu data...";
+    const posPercent = ((stats.positive / stats.total) * 100).toFixed(1);
+    const negPercent = ((stats.negative / stats.total) * 100).toFixed(1);
+    return stats.positive > stats.negative
+      ? `Dominan positif (${posPercent}%)`
+      : `Dominan negatif (${negPercent}%)`;
+  }, [stats]);
 
-  const SentimentDistribution = [
+  const sentimentData = [
     { label: "positive", value: stats.positive, fill: "var(--color-positive)" },
     { label: "negative", value: stats.negative, fill: "var(--color-negative)" },
     { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)" },
@@ -65,23 +108,27 @@ export default function HomePage() {
         item.platform && item.platform.toString().toLowerCase() === "youtube",
     ).length,
   };
-  const PlatformDistribution = [
-    { label: "News", value: platform.News, fill: "var(--color-news)" },
-    { label: "Twitter", value: platform.Twitter, fill: "var(--color-twitter)" },
-    { label: "Tiktok", value: platform.Tiktok, fill: "var(--color-tiktok)" },
-    { label: "Youtube", value: platform.Youtube, fill: "var(--color-youtube)" },
-  ];
-  const wordCloudData = rawData.reduce((acc: any[], item: any) => {
-    item.top_keyword?.forEach((word: string) => {
-      const existing = acc.find((w) => w.text === word);
-      if (existing) {
-        existing.value += 1;
-      } else {
-        acc.push({ text: word, value: 1 });
-      }
+
+  const platformDistribution = useMemo(() => {
+    const platforms = ["news", "twitter", "tiktok", "youtube"];
+    return platforms.map((p) => ({
+      label: p.charAt(0).toUpperCase() + p.slice(1),
+      value: rawData.filter((i) => i.platform?.toLowerCase() === p).length,
+      fill: `var(--color-${p})`,
+    }));
+  }, [rawData]);
+
+  const wordCloudData = useMemo(() => {
+    const acc: any[] = [];
+    rawData.forEach((item) => {
+      item.top_keyword?.forEach((word: string) => {
+        const existing = acc.find((w) => w.text === word);
+        if (existing) existing.value += 1;
+        else acc.push({ text: word, value: 1 });
+      });
     });
-    return acc;
-  }, []);
+    return acc.sort((a, b) => b.value - a.value).slice(0, 50); // Batasi 50 kata biar gak berat
+  }, [rawData]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
@@ -102,7 +149,7 @@ export default function HomePage() {
             title="Distribution Label"
             description="Distribusi Sentiment hari ini"
             footer={sentimentSummary}
-            chartData={SentimentDistribution}
+            chartData={sentimentData}
           />
         </div>
 
@@ -117,18 +164,19 @@ export default function HomePage() {
           <WordCloudCard data={wordCloudData} />
         </div>
         <div className="md:col-span-4">
-          <ChartPieDonut
+          <ChartPieLegend
             title="Distribution platform"
             description="Distribusi Platform"
-            chartData={PlatformDistribution}
+            chartData={platform}
           />
         </div>
+        f
       </div>
 
       <div className="flex flex-col gap-6">
         <DataTable data={rawData} />
         <div className="w-full">
-          <ChartLineInteractive data={rawData} />
+          <ChartLineInteractive />
         </div>
         <div className="  "></div>
       </div>
