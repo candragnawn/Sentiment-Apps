@@ -2,14 +2,14 @@
 
 import { MailIcon, PlusCircleIcon, type LucideIcon } from "lucide-react";
 
-import { Button } from "@/src/app/dashboard/components/ui/button";
+import { Button } from "@/src/components/ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/src/app/dashboard/components/ui/sidebar";
+} from "@/src/components/ui/sidebar";
 
 export function NavMain({
   items,

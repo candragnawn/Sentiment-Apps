@@ -10,13 +10,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/src/app/dashboard/components/ui/card"
+} from "@/src/components/ui/card"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/src/app/dashboard/components/ui/chart"
+} from "@/src/components/ui/chart"
 import { positive } from "zod"
 
 export const description = "A donut chart"

@@ -1,10 +1,10 @@
-import { AppSidebar } from "@/src/app/dashboard/components/app-sidebar";
-import { SiteHeader } from "@/src/app/dashboard/components/site-header";
-import { ThemeProvider } from "@/src/app/dashboard/components/theme-provider";
+import { AppSidebar } from "@/src/components/app-sidebar";
+import { SiteHeader } from "@/src/components/site-header";
+import { ThemeProvider } from "@/src/components/theme-provider";
 import {
   SidebarInset,
   SidebarProvider,
-} from "@/src/app/dashboard/components/ui/sidebar";
+} from "@/src/components/ui/sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

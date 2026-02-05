@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from "@/src/app/dashboard/components/ui/card";
+} from "@/src/components/ui/card";
 
 export function WordCloudCard({
   data,
@@ -14,16 +14,16 @@ export function WordCloudCard({
   data: { text: string; value: number }[];
 }) {
   return (
-    <Card className="h-full bg-[#0c0c0c] border-zinc-800">
+    <Card className="h-full card[--color-card]">
       <CardHeader>
-        <CardTitle className="text-lg font-medium text-zinc-400">
+        <CardTitle className="text-lg font-medium text-white">
           Top Keywords Analysis
         </CardTitle>
       </CardHeader>
       <CardContent>
         <WorldCloud
           data={data}
-          width={1500}
+          width={1800}
           height={400}
           font="inter"
           fontWeight="bold"

@@ -12,7 +12,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/src/app/dashboard/components/ui/avatar";
+} from "@/src/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,13 +21,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/src/app/dashboard/components/ui/dropdown-menu";
+} from "@/src/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/src/app/dashboard/components/ui/sidebar";
+} from "@/src/components/ui/sidebar";
 
 export function NavUser({
   user,

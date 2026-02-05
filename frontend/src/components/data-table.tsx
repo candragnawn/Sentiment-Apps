@@ -55,15 +55,15 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Badge } from "@/src/app/dashboard/components/ui/badge";
-import { Button } from "@/src/app/dashboard/components/ui/button";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/src/app/dashboard/components/ui/chart";
-import { Checkbox } from "@/src/app/dashboard/components/ui/checkbox";
+} from "@/src/components/ui/chart";
+import { Checkbox } from "@/src/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -71,17 +71,17 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/src/app/dashboard/components/ui/dropdown-menu";
-import { Input } from "@/src/app/dashboard/components/ui/input";
-import { Label } from "@/src/app/dashboard/components/ui/label";
+} from "@/src/components/ui/dropdown-menu";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/app/dashboard/components/ui/select";
-import { Separator } from "@/src/app/dashboard/components/ui/separator";
+} from "@/src/components/ui/select";
+import { Separator } from "@/src/components/ui/separator";
 import {
   Sheet,
   SheetClose,
@@ -91,7 +91,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/src/app/dashboard/components/ui/sheet";
+} from "@/src/components/ui/sheet";
 import {
   Table,
   TableBody,
@@ -99,13 +99,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/src/app/dashboard/components/ui/table";
+} from "@/src/components/ui/table";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/src/app/dashboard/components/ui/tabs";
+} from "@/src/components/ui/tabs";
 
 export const schema = z.object({
   id: z.number(),

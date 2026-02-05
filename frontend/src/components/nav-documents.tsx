@@ -12,7 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/src/app/dashboard/components/ui/dropdown-menu";
+} from "@/src/components/ui/dropdown-menu";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -21,7 +21,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/src/app/dashboard/components/ui/sidebar";
+} from "@/src/components/ui/sidebar";
 
 export function NavDocuments({
   items,

@@ -1,14 +1,14 @@
 "use client";
 import { TrendingDownIcon, TrendingUpIcon, MessageSquareIcon, SmileIcon, FrownIcon, BarChart3Icon } from "lucide-react"
 
-import { Badge } from "@/src/app/dashboard/components/ui/badge"
+import { Badge } from "@/src/components/ui/badge"
 import {
   Card,
   CardFooter,
   CardHeader,
   CardTitle,
   CardDescription
-} from "@/src/app/dashboard/components/ui/card"
+} from "@/src/components/ui/card"
 
 interface SectionCardsProps {
   total: number;

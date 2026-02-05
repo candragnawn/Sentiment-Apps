@@ -5,11 +5,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
   SidebarInset,
-} from "@/src/app/dashboard/components/ui/sidebar";
-import { AppSidebar } from "@/src/app/dashboard/components/app-sidebar";
-import { ThemeProvider } from "@/src/app/dashboard/components/ui/theme-provider";
-import { ModeToggle } from "@/src/app/dashboard/components/mode-togle";
-import { InputInline } from "./dashboard/components/search";
+} from "@/src/components/ui/sidebar";
+import { AppSidebar } from "@/src/components/app-sidebar";
+import { ThemeProvider } from "@/src/components/theme-provider";
+import { ModeToggle } from "@/src/components/mode-togle";
+import { InputInline } from "@/src/components/search";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

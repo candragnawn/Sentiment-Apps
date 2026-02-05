@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SectionCards } from "@/src/app/dashboard/components/section-cards";
-import { ChartAreaInteractive } from "@/src/app/dashboard/components/chart-area-interactive";
-import { DataTable } from "@/src/app/dashboard/components/data-table";
-import { ChartLineInteractive } from "./dashboard/components/chart-line-interactive";
-import { ChartPieDonut } from "./dashboard/components/chart-pie-donut";
-import { WordCloudCard } from "./dashboard/components/world-cloud";
+import { SectionCards } from "@/src/components/section-cards";
+import { ChartAreaInteractive } from "@/src//components/chart-area-interactive";
+import { DataTable } from "@/src//components/data-table";
+import { ChartLineInteractive } from "@/src//components/chart-line-interactive";
+import { ChartPieDonut } from "@/src//components/chart-pie-donut";
+import { WordCloudCard } from "@/src/components/world-cloud";
 
 export default function HomePage() {
   const [rawData, setRawData] = useState<any[]>([]);

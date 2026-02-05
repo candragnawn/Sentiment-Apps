@@ -6,7 +6,7 @@ class TwitterScraper:
         self.url = "https://twitter135.p.rapidapi.com/Search" 
         self.host = "twitter135.p.rapidapi.com"
 
-    def fetch_tweets(self, keyword, limit=100):
+    def fetch_tweets(self, keyword, limit=500):
         print(f"twitter: mencari tweet via RapidAPI untuk: '{keyword}'...")
         
         headers = {
