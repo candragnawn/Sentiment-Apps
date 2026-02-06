@@ -1,4 +1,10 @@
 
+import sys
+import os
+from pathlib import Path
+current_dir = Path(__file__).parent
+sys.path.append(str(current_dir))
+
 from fastapi import FastAPI, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
 from core.analyzer import sentimentAnalyzer
@@ -51,7 +57,8 @@ async def start_analysis(
     return {"status": "processing", "keyword": keyword}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
 
 

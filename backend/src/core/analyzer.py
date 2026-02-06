@@ -7,6 +7,9 @@ from database.database_supabase import SentimentDatabase
 from transformers import pipeline
 from datetime import datetime
 import dateparser
+import torch
+
+
 
 class sentimentAnalyzer:
     def __init__(self):
@@ -16,12 +19,14 @@ class sentimentAnalyzer:
         self.tiktok_scraper = TiktokScrapper()
         self.cleaner = DataCleaner()
         self.db = SentimentDatabase()
-        
+        self.device = 0 if torch.cuda.is_available() else -1
+        print(f"Sentiment AI Engine Active!")
+        print(f"Running on: {'GPU (CUDA)' if self.device == 0 else 'CPU'}")
         model_name = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
         self.analyzer = pipeline("sentiment-analysis", model=model_name)
 
     def run_all(self, keyword, days_back=30):
-        has_data = self.db.check_excisting_keyword(keyword)
+        has_data = self.db.check_existing_keyword(keyword)
 
         if has_data:
             print(f"Data for '{keyword}' found in database. skipping scrape")
@@ -29,10 +34,10 @@ class sentimentAnalyzer:
         print(f"No data for '{keyword}'. Starting fresh scrape...")
         # self.db.hapus_semua_data()
         
-        news = self.news_scraper.fetch_news(keyword, limit=500)
-        tiktok = self.tiktok_scraper.fetch_tiktok(keyword, limit=500)
-        youtube = self.youtube_scraper.search_and_fetch(keyword, max_videos=500)
-        tweets = self.twitter_scraper.fetch_tweets(keyword, limit=500).get('tweets', [])
+        news = self.news_scraper.fetch_news(keyword, limit=100)
+        tiktok = self.tiktok_scraper.fetch_tiktok(keyword, limit=30)
+        youtube = self.youtube_scraper.search_and_fetch(keyword, max_videos=30)
+        tweets = self.twitter_scraper.fetch_tweets(keyword, limit=50).get('tweets', [])
 
         processed_data = []
         

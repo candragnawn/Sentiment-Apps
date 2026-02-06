@@ -3,6 +3,20 @@ from supabase import create_client, client
 from datetime import datetime, timedelta
 
 class SentimentDatabase:
+    def check_existing_keyword(self, keyword):
+        try:
+          
+            res = self.supabase.table("sentiments") \
+                .select("id") \
+                .eq("keyword", keyword) \
+                .limit(1) \
+                .execute()
+            
+      
+            return len(res.data) > 0
+        except Exception as e:
+            print(f"Error checking cache: {e}")
+            return False
     def __init__(self):
         url: str ="https://fbkfqsqqkxobmdefokjz.supabase.co"
         key: str ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2Zxc3Fxa3hvYm1kZWZva2p6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODkyMjg2MywiZXhwIjoyMDg0NDk4ODYzfQ.5tdJc8WIqnt9F9kPUrQEIiKQmszAlzs1OVQtFROxFiM"

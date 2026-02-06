@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { SectionCards } from "@/src/components/section-cards";
 import { InputInline } from "@/src/components/search";
+import { HeroSection } from "../components/hero-section";
 
 const ChartAreaInteractive = dynamic(
   () =>
