@@ -10,7 +10,7 @@ class NewsScraper:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
         }
 
-    def fetch_news(self, keyword, limit=500, days_back=30):
+    def fetch_news(self, keyword, limit=1000, days_back=30):
         encoded = urllib.parse.quote_plus(keyword)
         url = f"https://news.google.com/rss/search?q={encoded}&hl=id&gl=ID&ceid=ID:id"
         

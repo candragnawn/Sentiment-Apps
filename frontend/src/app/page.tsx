@@ -42,10 +42,15 @@ const ChartPieLegend = dynamic(
 
 export default function HomePage() {
   const [tableData, setTableData] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>({ total: 0, positive: 0, negative: 0, neutral: 0 });
+  const [stats, setStats] = useState<any>({
+    total: 0,
+    positive: 0,
+    negative: 0,
+    neutral: 0,
+  });
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const searchParams = useSearchParams();
   const keyword = searchParams.get("keyword") || "";
 
@@ -53,18 +58,24 @@ export default function HomePage() {
     setLoading(true);
     try {
       const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
-      
-      // Parallel fetching for performance
+
       const [statsRes, chartRes, tableRes] = await Promise.all([
-        fetch(`http://127.0.0.1:8000/api/sentiment/stats${query}`, { cache: "no-store" }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, { cache: "no-store" }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/list${query}&page_size=200`, { cache: "no-store" }) 
+        fetch(`http://127.0.0.1:8000/api/sentiment/stats${query}`, {
+          cache: "no-store",
+        }),
+        fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, {
+          cache: "no-store",
+        }),
+        fetch(
+          `http://127.0.0.1:8000/api/sentiment/list${query}&page_size=200`,
+          { cache: "no-store" },
+        ),
       ]);
 
       const [statsJson, chartJson, tableJson] = await Promise.all([
         statsRes.json(),
         chartRes.json(),
-        tableRes.json()
+        tableRes.json(),
       ]);
 
       setStats(statsJson);
@@ -99,11 +110,22 @@ export default function HomePage() {
   //     : `Dominan negatif (${negPercent}%)`;
   // }, [stats]);
 
-  const sentimentData = useMemo(() => [
-    { label: "positive", value: stats.positive, fill: "var(--color-positive)" },
-    { label: "negative", value: stats.negative, fill: "var(--color-negative)" },
-    { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)" },
-  ], [stats]);
+  const sentimentData = useMemo(
+    () => [
+      {
+        label: "positive",
+        value: stats.positive,
+        fill: "var(--color-positive)",
+      },
+      {
+        label: "negative",
+        value: stats.negative,
+        fill: "var(--color-negative)",
+      },
+      { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)" },
+    ],
+    [stats],
+  );
   // const platform = { // This was removed as platformDistribution is now used
   //   News: rawData.filter(
   //     (item: any) =>
@@ -139,7 +161,7 @@ export default function HomePage() {
         wordMap.set(word, (wordMap.get(word) || 0) + 1);
       });
     });
-    
+
     return Array.from(wordMap.entries())
       .map(([text, value]) => ({ text, value }))
       .sort((a, b) => b.value - a.value)
