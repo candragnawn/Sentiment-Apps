@@ -7,7 +7,7 @@ class TiktokScrapper:
         self.url = "https://scraptik.p.rapidapi.com/search-posts"
         self.host = "scraptik.p.rapidapi.com"
     
-    def fetch_tiktok(self, keyword, limit=100, publish_time=0):
+    def fetch_tiktok(self, keyword, limit=500, publish_time=0):
         headers = {
             "X-RapidAPI-Key": self.api_key,
             "X-RapidAPI-Host": self.host

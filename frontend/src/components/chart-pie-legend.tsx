@@ -70,7 +70,7 @@ export function ChartPieLegend({ title, description, chartData, footer }: any) {
           className="mx-auto aspect-square max-h-[300px]"
         >
           <PieChart>
-            <Pie data={chartData} dataKey="" />
+            <Pie data={chartData} dataKey="value" />
             <ChartLegend
               content={<ChartLegendContent nameKey="label" />}
               className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"

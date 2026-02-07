@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Field } from "@/src/components/ui/field";
 import { Input } from "@/src/components/ui/input";
@@ -9,7 +10,9 @@ interface InputInlineProps {
 }
 
 export function InputInline({ onStart, onComplete }: InputInlineProps) {
-  const [keyword, setKeyword] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
@@ -18,16 +21,12 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
     setLoading(true);
     onStart?.();
     try {
+      router.push("/?keyword=" + encodeURIComponent(keyword));
       const response = await fetch(
         `http://127.0.0.1:8000/analyze?keyword=${encodeURIComponent(keyword)}`,
       );
       if (response.ok) {
-        setTimeout(() => {
-          setLoading(false);
-          onComplete?.();
-        }, 2000);
-      } else {
-        throw new Error("Server error");
+        setTimeout(() => setLoading(false), 2000);
       }
     } catch (error) {
       console.error("gagal memulai analisis", error);

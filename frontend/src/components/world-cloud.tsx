@@ -17,14 +17,14 @@ export function WordCloudCard({
     <Card className="h-full card[--color-card]">
       <CardHeader>
         <CardTitle className="text-lg font-medium text-white">
-          Top Keywords Analysis
+          Top Keywords WordCloud
         </CardTitle>
       </CardHeader>
       <CardContent>
         <WorldCloud
           data={data}
-          width={3000}
-          height={700}
+          width={1800}
+          height={600}
           font="inter"
           fontWeight="bold"
           fontSize={(word) => Math.log2(word.value + 1) * 20}

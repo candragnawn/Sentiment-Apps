@@ -49,7 +49,7 @@ export default function RootLayout({
                 <div className="ml-auto top-4 right-4">
                   <ModeToggle />
                 </div>
-                <header className="sticky top-0 z-50 flex h-14 items-center gap-2 bg-background px-5">
+                <header className="sticky top-0 z-50 flex h-10 items-center gap-2 bg-background px-5">
                   <SidebarTrigger className="-ml-1" />
                   <div className="mx-auto p-2">
                     <InputInline />

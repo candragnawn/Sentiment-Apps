@@ -1,3 +1,5 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from scrapping.scrapper import NewsScraper
 from scrapping.youtube_scraper import YoutubeScraper
 from scrapping.twitter_scraper import TwitterScraper
@@ -23,7 +25,8 @@ class sentimentAnalyzer:
         print(f"Sentiment AI Engine Active!")
         print(f"Running on: {'GPU (CUDA)' if self.device == 0 else 'CPU'}")
         model_name = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
-        self.analyzer = pipeline("sentiment-analysis", model=model_name)
+        self.analyzer = pipeline("sentiment-analysis", model=model_name, device=self.device)
+        print(f"Running on: {'GPU' if self.device == 0 else 'CPU'}")
 
     def run_all(self, keyword, days_back=30):
         has_data = self.db.check_existing_keyword(keyword)
@@ -32,13 +35,18 @@ class sentimentAnalyzer:
             print(f"Data for '{keyword}' found in database. skipping scrape")
             return {"status": "success", "source": "cache", "message":"Data loaded from database"}
         print(f"No data for '{keyword}'. Starting fresh scrape...")
-        # self.db.hapus_semua_data()
-        
-        news = self.news_scraper.fetch_news(keyword, limit=100)
-        tiktok = self.tiktok_scraper.fetch_tiktok(keyword, limit=30)
-        youtube = self.youtube_scraper.search_and_fetch(keyword, max_videos=30)
-        tweets = self.twitter_scraper.fetch_tweets(keyword, limit=50).get('tweets', [])
+        with ThreadPoolExecutor() as executor:
+            f_news = executor.submit(self.news_scraper.fetch_news, keyword, 1500)
+            f_tiktok = executor.submit(self.tiktok_scraper.fetch_tiktok, keyword, 1500)
+            f_yt = executor.submit(self.youtube_scraper.search_and_fetch, keyword, 1500)
+            f_tweets = executor.submit(self.twitter_scraper.fetch_tweets, keyword, 1500)
 
+            news = f_news.result() or []
+            tiktok = f_tiktok.result() or []
+            youtube = f_yt.result() or []
+            tw_res = f_tweets.result() or {}
+            tweets = tw_res.get('tweets', [])
+            print(f"DEBUG SCRAPE - News: {len(news)}, TikTok: {len(tiktok)}, YT: {len(youtube)}, Tweets: {len(tweets)}")
         processed_data = []
         
         for item in news:
@@ -95,10 +103,20 @@ class sentimentAnalyzer:
         valid_texts = [t for t in all_clean_text if t]
 
         if valid_texts:
-            print(f"Analyzing {len(valid_texts)} items in batch...")
-            predictions = self.analyzer(valid_texts, batch_size=16)
+            total_data = len(valid_texts)
+            chunk_size = 50
+            all_predictions = []
+            print(f"Analyzing {total_data} items in batch...")
+            for i in range(0, total_data, chunk_size):
+                end_index = min(i + chunk_size, total_data)
+                batch = valid_texts[i:end_index]
+                
+                print(f"⏳ Processing: {i} to {end_index} ({int(end_index/total_data*100)}%)")
+              
+                batch_preds = self.analyzer(batch, batch_size=16)
+                all_predictions.extend(batch_preds)
             for i, item in enumerate(valid_items):
-                result = predictions[i]
+                result = all_predictions[i]
                 final_results.append({
                     "keyword": keyword,
                     "platform": item['platform'],
@@ -107,9 +125,18 @@ class sentimentAnalyzer:
                     "text_clean": valid_texts[i],
                     "label": result['label'],
                     "score": round(result['score'] * 100, 2),
-                    "top_keyword": valid_texts[i].split()[:100],
+                    "top_keyword": valid_texts[i].split()[:10],
                     "published_date": item.get('published_date'),
                     "created_at": datetime.now().isoformat()
                 })
             if final_results:
-                chunk_size = 100
+                print(f"Menyimpan {len(final_results)} data ke database...")
+                success = self.db.save_results(final_results)
+
+                if success:
+                    print("Analisis selesai dan data berhasil disimpan!")
+                    return {"status": "success", "count": len(final_results)}
+                else:
+                    print("Gagal menyimpan data ke database.")
+                    return {"status": "error", "message": "Database insert failed"}
+        return {"status": "no_data", "message": "Tidak ada data valid untuk dianalisis"}

@@ -31,13 +31,16 @@ def read_root():
 @app.get('/api/sentiment/list')
 async def get_list(
     keyword: Optional[str] = None,
-    days: Optional[int] = Query(None)
+    days: Optional[int] = Query(None),
+    page: int = Query(1),
+    page_size: int = Query(100)
 ):
     if days:
         end = datetime.now()
         start = end - timedelta(days=days)
         return db.fetch_data_by_date_range(start, end, keyword)
-    return db.fetch_all_data()
+    
+    return db.fetch_paginated(page=page, page_size=page_size, keyword=keyword)
 
 @app.get('/api/sentiment/stats')
 async def get_stats(keyword: Optional[str] = None):
@@ -50,11 +53,11 @@ async def get_chart(days: int = Query(30), keyword: Optional[str] = None):
 @app.get("/analyze")
 async def start_analysis(
     keyword: str, 
-    days_back: int = Query(30),
-    background_tasks: BackgroundTasks = BackgroundTasks()
+    background_tasks: BackgroundTasks, 
+    days_back: int = 30  
 ):
     background_tasks.add_task(analyzer.run_all, keyword, days_back)
-    return {"status": "processing", "keyword": keyword}
+    return {"status": "processing", "message": "Analisis dimulai di background"}
 
 if __name__ == "__main__":
     import uvicorn

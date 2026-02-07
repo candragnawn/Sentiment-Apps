@@ -24,7 +24,11 @@ class SentimentDatabase:
 
     def save_results(self, data_dict):
         try:
-            self.supabase.table('sentiments').insert(data_dict).execute()
+            chunk_size = 100
+            for i in range(0, len(data_dict), chunk_size):
+                chunk = data_dict[i:i + chunk_size]
+                self.supabase.table('sentiments').insert(chunk).execute()
+            return True
         except Exception as e:
             print(f"Error saving to supabase: {e}")
     
@@ -34,13 +38,16 @@ class SentimentDatabase:
         except Exception as e:
             print(f"Error deleting from supabase: {e}")
 
-    def fetch_all_data(self):
-        try:
-            response = self.supabase.table('sentiments').select("*").execute()
-            return response.data
-        except Exception as e:
-            print(f"Error fetching: {e}")
-            return []
+    def fetch_all_data(self, keyword=None):
+       try:
+        query = self.supabase.table('sentiments').select("*")
+        if keyword:
+            query = query.eq('keyword', keyword)
+        response = query.execute()
+        return response.data
+       except Exception as e:
+        print(f"Error fetching all data: {e}")
+        return []
     
     def fetch_data_by_date_range(self, start_date, end_date, keyword=None):
         try:

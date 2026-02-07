@@ -12,7 +12,7 @@ class NewsScraper:
 
     def fetch_news(self, keyword, limit=500, days_back=30):
         encoded = urllib.parse.quote_plus(keyword)
-        url = f"https://news.google.com/rss/search?q={encoded}+when:{days_back}d&hl=id&gl=ID&ceid=ID:id"
+        url = f"https://news.google.com/rss/search?q={encoded}&hl=id&gl=ID&ceid=ID:id"
         
         articles = []
         cutoff = datetime.now() - timedelta(days=days_back)
@@ -30,6 +30,9 @@ class NewsScraper:
                     
                     pub_date_str = item.find('pubDate').text if item.find('pubDate') else None
                     pub_date = dateparser.parse(pub_date_str) if pub_date_str else None
+                    
+                    if pub_date:
+                        pub_date = pub_date.replace(tzinfo=None)
                     
                     if pub_date and pub_date < cutoff:
                         continue

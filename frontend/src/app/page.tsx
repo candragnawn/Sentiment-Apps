@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { SectionCards } from "@/src/components/section-cards";
 import { InputInline } from "@/src/components/search";
 import { HeroSection } from "../components/hero-section";
+import { useSearchParams } from "next/navigation";
 
 const ChartAreaInteractive = dynamic(
   () =>
@@ -40,33 +41,45 @@ const ChartPieLegend = dynamic(
 );
 
 export default function HomePage() {
-  const [rawData, setRawData] = useState<any[]>([]);
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({ total: 0, positive: 0, negative: 0, neutral: 0 });
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const searchParams = useSearchParams();
+  const keyword = searchParams.get("keyword") || "";
 
-  const loadData = useCallback(async () => {
+  const loadDashboardData = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/sentiment/list", {
-        cache: "no-store",
-      });
-      const json = await response.json();
-      setRawData(Array.isArray(json) ? json : json.data || []);
+      const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
+      
+      // Parallel fetching for performance
+      const [statsRes, chartRes, tableRes] = await Promise.all([
+        fetch(`http://127.0.0.1:8000/api/sentiment/stats${query}`, { cache: "no-store" }),
+        fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, { cache: "no-store" }),
+        fetch(`http://127.0.0.1:8000/api/sentiment/list${query}&page_size=200`, { cache: "no-store" }) 
+      ]);
+
+      const [statsJson, chartJson, tableJson] = await Promise.all([
+        statsRes.json(),
+        chartRes.json(),
+        tableRes.json()
+      ]);
+
+      setStats(statsJson);
+      setChartData(chartJson);
+      setTableData(Array.isArray(tableJson) ? tableJson : tableJson.data || []);
     } catch (error) {
-      console.error("Failed to load data", error);
+      console.error("Failed to load dashboard data", error);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [keyword]);
 
   useEffect(() => {
-    loadData();
-  }, []);
-
-  const stats = useMemo(
-    () => ({
-      total: rawData.length,
-      positive: rawData.filter((item: any) => item.label === "positive").length,
-      negative: rawData.filter((item: any) => item.label === "negative").length,
-      neutral: rawData.filter((item: any) => item.label === "neutral").length,
-    }),
-    [rawData],
-  );
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const positivePercent =
     stats.total > 0 ? ((stats.positive / stats.total) * 100).toFixed(1) : 0;
@@ -77,59 +90,61 @@ export default function HomePage() {
     stats.positive > stats.negative
       ? `Dominan sentimen positif (${positivePercent}%)`
       : `Dominan sentimen negatif (${negativePercent}%)`;
-  const summary = useMemo(() => {
-    if (stats.total === 0) return "Menunggu data...";
-    const posPercent = ((stats.positive / stats.total) * 100).toFixed(1);
-    const negPercent = ((stats.negative / stats.total) * 100).toFixed(1);
-    return stats.positive > stats.negative
-      ? `Dominan positif (${posPercent}%)`
-      : `Dominan negatif (${negPercent}%)`;
-  }, [stats]);
+  // const summary = useMemo(() => { // This was removed as sentimentSummary is sufficient
+  //   if (stats.total === 0) return "Menunggu data...";
+  //   const posPercent = ((stats.positive / stats.total) * 100).toFixed(1);
+  //   const negPercent = ((stats.negative / stats.total) * 100).toFixed(1);
+  //   return stats.positive > stats.negative
+  //     ? `Dominan positif (${posPercent}%)`
+  //     : `Dominan negatif (${negPercent}%)`;
+  // }, [stats]);
 
-  const sentimentData = [
+  const sentimentData = useMemo(() => [
     { label: "positive", value: stats.positive, fill: "var(--color-positive)" },
     { label: "negative", value: stats.negative, fill: "var(--color-negative)" },
     { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)" },
-  ];
-  const platform = {
-    News: rawData.filter(
-      (item: any) =>
-        item.platform && item.platform.toString().toLowerCase() === "news",
-    ).length,
-    Twitter: rawData.filter(
-      (item: any) =>
-        item.platform && item.platform.toString().toLowerCase() === "twitter",
-    ).length,
-    Tiktok: rawData.filter(
-      (item: any) =>
-        item.platform && item.platform.toString().toLowerCase() === "tiktok",
-    ).length,
-    Youtube: rawData.filter(
-      (item: any) =>
-        item.platform && item.platform.toString().toLowerCase() === "youtube",
-    ).length,
-  };
+  ], [stats]);
+  // const platform = { // This was removed as platformDistribution is now used
+  //   News: rawData.filter(
+  //     (item: any) =>
+  //       item.platform && item.platform.toString().toLowerCase() === "news",
+  //   ).length,
+  //   Twitter: rawData.filter(
+  //     (item: any) =>
+  //       item.platform && item.platform.toString().toLowerCase() === "twitter",
+  //   ).length,
+  //   Tiktok: rawData.filter(
+  //     (item: any) =>
+  //       item.platform && item.platform.toString().toLowerCase() === "tiktok",
+  //   ).length,
+  //   Youtube: rawData.filter(
+  //     (item: any) =>
+  //       item.platform && item.platform.toString().toLowerCase() === "youtube",
+  //   ).length,
+  // };
 
   const platformDistribution = useMemo(() => {
     const platforms = ["news", "twitter", "tiktok", "youtube"];
     return platforms.map((p) => ({
       label: p.charAt(0).toUpperCase() + p.slice(1),
-      value: rawData.filter((i) => i.platform?.toLowerCase() === p).length,
+      value: tableData.filter((i) => i.platform?.toLowerCase() === p).length,
       fill: `var(--color-${p})`,
     }));
-  }, [rawData]);
+  }, [tableData]);
 
   const wordCloudData = useMemo(() => {
-    const acc: any[] = [];
-    rawData.forEach((item) => {
+    const wordMap = new Map<string, number>();
+    tableData.forEach((item) => {
       item.top_keyword?.forEach((word: string) => {
-        const existing = acc.find((w) => w.text === word);
-        if (existing) existing.value += 1;
-        else acc.push({ text: word, value: 1 });
+        wordMap.set(word, (wordMap.get(word) || 0) + 1);
       });
     });
-    return acc.sort((a, b) => b.value - a.value).slice(0, 50); // Batasi 50 kata biar gak berat
-  }, [rawData]);
+    
+    return Array.from(wordMap.entries())
+      .map(([text, value]) => ({ text, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 350);
+  }, [tableData]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
@@ -155,31 +170,28 @@ export default function HomePage() {
         </div>
 
         <div className="md:col-span-8">
-          <ChartAreaInteractive data={rawData} />
+          <ChartAreaInteractive data={chartData} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8">
-          {" "}
           <WordCloudCard data={wordCloudData} />
         </div>
         <div className="md:col-span-4">
           <ChartPieLegend
             title="Distribution platform"
             description="Distribusi Platform"
-            chartData={platform}
+            chartData={platformDistribution}
           />
         </div>
-        f
       </div>
 
       <div className="flex flex-col gap-6">
-        <DataTable data={rawData} />
+        <DataTable data={tableData} />
         <div className="w-full">
           <ChartLineInteractive />
         </div>
-        <div className="  "></div>
       </div>
     </div>
   );
