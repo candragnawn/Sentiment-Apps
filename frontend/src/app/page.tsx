@@ -131,28 +131,10 @@ export default function HomePage() {
     ],
     [stats],
   );
-  // const platform = { // This was removed as platformDistribution is now used
-  //   News: rawData.filter(
-  //     (item: any) =>
-  //       item.platform && item.platform.toString().toLowerCase() === "news",
-  //   ).length,
-  //   Twitter: rawData.filter(
-  //     (item: any) =>
-  //       item.platform && item.platform.toString().toLowerCase() === "twitter",
-  //   ).length,
-  //   Tiktok: rawData.filter(
-  //     (item: any) =>
-  //       item.platform && item.platform.toString().toLowerCase() === "tiktok",
-  //   ).length,
-  //   Youtube: rawData.filter(
-  //     (item: any) =>
-  //       item.platform && item.platform.toString().toLowerCase() === "youtube",
-  //   ).length,
-  // };
 
   const platformDistribution = useMemo(() => {
     if (platformData && platformData.length > 0) {
-      // Ensure labeling matches chartConfig keys (lowercase)
+  
       return platformData.map(item => ({
         ...item,
         label: item.label.toLowerCase()
