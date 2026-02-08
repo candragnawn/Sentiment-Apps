@@ -31,16 +31,20 @@ import {
 
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
+  sentiment: {
+    label: "Sentiment",
   },
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
+  positive: {
+    label: "Positive",
+    color: "hsl(var(--chart-1))", 
   },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2))",
+  negative: {
+    label: "Negative",
+    color: "hsl(var(--chart-2))", 
+  },
+  neutral: {
+    label: "Neutral",
+    color: "hsl(var(--chart-3))", 
   },
 } satisfies ChartConfig;
 
@@ -75,12 +79,12 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
   return (
     <Card className="@container/card">
       <CardHeader className="relative">
-        <CardTitle>Total Visitors</CardTitle>
+        <CardTitle>Sentiment Analysis Trend</CardTitle>
         <CardDescription>
           <span className="@[540px]/card:block hidden">
-            Total for the last 3 months
+            Sentiment trends over time
           </span>
-          <span className="@[540px]/card:hidden">Last 3 months</span>
+          <span className="@[540px]/card:hidden">Trend over time</span>
         </CardDescription>
         <div className="absolute right-4 top-4">
           <ToggleGroup
@@ -91,13 +95,13 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
             className="@[767px]/card:flex hidden"
           >
             <ToggleGroupItem value="90d" className="h-8 px-2.5">
-              Last 3 months
+              90 Days
             </ToggleGroupItem>
             <ToggleGroupItem value="30d" className="h-8 px-2.5">
-              Last 30 days
+              30 Days
             </ToggleGroupItem>
             <ToggleGroupItem value="7d" className="h-8 px-2.5">
-              Last 7 days
+              7 Days
             </ToggleGroupItem>
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -105,17 +109,17 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
               className="@[767px]/card:hidden flex w-40"
               aria-label="Select a value"
             >
-              <SelectValue placeholder="Last 3 months" />
+              <SelectValue placeholder="30 Days" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="90d" className="rounded-lg">
-                Last 3 months
+                90 Days
               </SelectItem>
               <SelectItem value="30d" className="rounded-lg">
-                Last 30 days
+                30 Days
               </SelectItem>
               <SelectItem value="7d" className="rounded-lg">
-                Last 7 days
+                7 Days
               </SelectItem>
             </SelectContent>
           </Select>
@@ -128,27 +132,39 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
         >
           <AreaChart data={filteredData}>
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="fillPositive" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={1.0}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-desktop)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-mobile)"
+                  stopColor="var(--color-positive)"
                   stopOpacity={0.8}
                 />
                 <stop
                   offset="95%"
-                  stopColor="var(--color-mobile)"
+                  stopColor="var(--color-positive)"
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
+              <linearGradient id="fillNegative" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-negative)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-negative)"
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
+              <linearGradient id="fillNeutral" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-neutral)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-neutral)"
                   stopOpacity={0.1}
                 />
               </linearGradient>
@@ -162,7 +178,7 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
+                return date.toLocaleDateString("id-ID", {
                   month: "short",
                   day: "numeric",
                 });
@@ -173,9 +189,10 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
+                    return new Date(value).toLocaleDateString("id-ID", {
+                      month: "long",
                       day: "numeric",
+                      year: "numeric",
                     });
                   }}
                   indicator="dot"
@@ -183,17 +200,24 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
               }
             />
             <Area
-              dataKey="mobile"
+              dataKey="negative"
               type="natural"
-              fill="url(#fillMobile)"
-              stroke="var(--color-mobile)"
+              fill="url(#fillNegative)"
+              stroke="var(--color-negative)"
               stackId="a"
             />
             <Area
-              dataKey="desktop"
+              dataKey="neutral"
               type="natural"
-              fill="url(#fillDesktop)"
-              stroke="var(--color-desktop)"
+              fill="url(#fillNeutral)"
+              stroke="var(--color-neutral)"
+              stackId="a"
+            />
+            <Area
+              dataKey="positive"
+              type="natural"
+              fill="url(#fillPositive)"
+              stroke="var(--color-positive)"
               stackId="a"
             />
           </AreaChart>

@@ -29,7 +29,10 @@ class NewsScraper:
                     clean_snippet = BeautifulSoup(snippet, "html.parser").get_text()
                     
                     pub_date_str = item.find('pubDate').text if item.find('pubDate') else None
-                    pub_date = dateparser.parse(pub_date_str) if pub_date_str else None
+                    pub_date = None
+                    if pub_date_str:
+                        # Google News RSS usually uses RFC 822 format: "Fri, 07 Feb 2025 12:00:00 GMT"
+                        pub_date = dateparser.parse(pub_date_str)
                     
                     if pub_date:
                         pub_date = pub_date.replace(tzinfo=None)
@@ -40,9 +43,10 @@ class NewsScraper:
                     articles.append({
                         'title': title,
                         'snippet': clean_snippet,
-                        'published_date': pub_date.isoformat() if pub_date else None
+                        'published_date': pub_date.isoformat() if pub_date else datetime.now().isoformat()
                     })
-                except:
+                except Exception as e:
+                    print(f"Error parsing news item: {e}")
                     continue
             return articles
         except Exception as e:

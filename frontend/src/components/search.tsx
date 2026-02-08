@@ -22,14 +22,35 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
     onStart?.();
     try {
       router.push("/?keyword=" + encodeURIComponent(keyword));
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+      const url = `http://127.0.0.1:8000/analyze?keyword=${encodeURIComponent(keyword)}`;
+      console.log("Fetching:", url);
       const response = await fetch(
-        `http://127.0.0.1:8000/analyze?keyword=${encodeURIComponent(keyword)}`,
+        url,
+        { signal: controller.signal }
       );
+      
+      clearTimeout(timeoutId);
+
       if (response.ok) {
+        const result = await response.json();
+        if (result.status === "error") {
+          alert(result.message); 
+        }
         setTimeout(() => setLoading(false), 2000);
+      } else {
+        console.error("Backend error:", response.statusText);
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("gagal memulai analisis", error);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        alert("Backend tidak merespon (timeout). Mungkin sedang memuat model AI.");
+      } else {
+        console.error("gagal memulai analisis", error);
+      }
       setLoading(false);
       onComplete?.();
     }

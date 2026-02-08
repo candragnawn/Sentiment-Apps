@@ -22,121 +22,141 @@ class sentimentAnalyzer:
         self.cleaner = DataCleaner()
         self.db = SentimentDatabase()
         self.device = 0 if torch.cuda.is_available() else -1
-        print(f"Sentiment AI Engine Active!")
-        print(f"Running on: {'GPU (CUDA)' if self.device == 0 else 'CPU'}")
+        print(f"Sentiment AI Engine Active!", flush=True)
+        print(f"Running on: {'GPU (CUDA)' if self.device == 0 else 'CPU'}", flush=True)
         model_name = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
         self.analyzer = pipeline("sentiment-analysis", model=model_name, device=self.device)
-        print(f"Running on: {'GPU' if self.device == 0 else 'CPU'}")
+        print(f"Running on: {'GPU' if self.device == 0 else 'CPU'}", flush=True)
 
-    def run_all(self, keyword, days_back=30):
-        has_data = self.db.check_existing_keyword(keyword)
-
-        if has_data:
-            print(f"Data for '{keyword}' found in database. skipping scrape")
-            return {"status": "success", "source": "cache", "message":"Data loaded from database"}
-        print(f"No data for '{keyword}'. Starting fresh scrape...")
-        with ThreadPoolExecutor() as executor:
-            f_news = executor.submit(self.news_scraper.fetch_news, keyword, 1500)
-            f_tiktok = executor.submit(self.tiktok_scraper.fetch_tiktok, keyword, 1500)
-            f_yt = executor.submit(self.youtube_scraper.search_and_fetch, keyword, 1500)
-            f_tweets = executor.submit(self.twitter_scraper.fetch_tweets, keyword, 1500)
-
-            news = f_news.result() or []
-            tiktok = f_tiktok.result() or []
-            youtube = f_yt.result() or []
-            tw_res = f_tweets.result() or {}
-            tweets = tw_res.get('tweets', [])
-            print(f"DEBUG SCRAPE - News: {len(news)}, TikTok: {len(tiktok)}, YT: {len(youtube)}, Tweets: {len(tweets)}")
-        processed_data = []
-        
-        for item in news:
-            processed_data.append({
-                'text': item['title'], 
-                'platform': 'News',
-                'published_date': item.get('published_date')
-            })
+    async def process_and_save(self, keyword, source_data, platform):
+        if not source_data:
+            return 0
             
-        for item in youtube:
-            processed_data.append({
-                'text': item['text'], 
-                'platform': 'YouTube',
-                'published_date': item.get('published_date')
-            })
+        print(f"Processing {len(source_data)} items from {platform}...", flush=True)
+        processed = []
+        for item in source_data:
+            text = ""
+            author = "Unknown"
+            if platform == 'News':
+                text = item['title']
+            elif platform == 'YouTube' or platform == 'TikTok':
+                text = item['text']
+                author = item.get('author', 'Unknown')
+            elif platform == 'Twitter':
+                text = item.get('legacy', {}).get('full_text') or item.get('text', '')
+                try:
+                    author = item.get('core', {}).get('user_results', {}).get('result', {}).get('legacy', {}).get('screen_name', 'Unknown')
+                except: pass
             
-        for t in tweets:
-            text = t.get('legacy', {}).get('full_text') or t.get('text')
             if not text: continue
             
-            pub_date = None
-            raw_date = t.get('legacy', {}).get('created_at')
-            if raw_date:
-                try:
-                    pub_date = dateparser.parse(raw_date).isoformat()
-                except:
-                    pass
-
-            author = 'Unknown'
-            try:
-                author = t.get('core', {}).get('user_results', {}).get('result', {}).get('legacy', {}).get('screen_name', 'Unknown')
-            except:
-                pass
-                
-            processed_data.append({
-                'text': text, 
-                'platform': 'Twitter',
+            clean = self.cleaner.clean_text(text)
+            if not clean: continue
+            
+            processed.append({
+                'text_raw': text,
+                'text_clean': clean,
+                'platform': platform,
                 'author': author,
-                'published_date': pub_date
+                'published_date': item.get('published_date') or datetime.now().isoformat()
             })
             
-        for t in tiktok:
-            if t.get('text'):
-                processed_data.append({
-                    'text': t['text'],
-                    'platform': 'TikTok',
-                    'author': t.get('author', 'User Tiktok'),
-                    'published_date': t.get('published_date')
-                })
-
+        if not processed:
+            return 0
+            
         final_results = []
-        all_clean_text = [self.cleaner.clean_text(item['text']) for item in processed_data]
-        valid_items = [item for i, item in enumerate(processed_data) if all_clean_text[i]]
-        valid_texts = [t for t in all_clean_text if t]
+        # Process in batch for efficiency
+        texts_to_analyze = [p['text_clean'] for p in processed]
+        predictions = self.analyzer(texts_to_analyze, batch_size=16)
+        
+        for i, p in enumerate(processed):
+            res = predictions[i]
+            final_results.append({
+                "keyword": keyword,
+                "platform": p['platform'],
+                "author": p['author'],
+                "text_raw": p['text_raw'],
+                "text_clean": p['text_clean'],
+                "label": res['label'],
+                "score": round(res['score'] * 100, 2),
+                "top_keyword": p['text_clean'].split()[:10],
+                "published_date": p['published_date'],
+                "created_at": datetime.now().isoformat()
+            })
+            
+        if final_results:
+            print(f"Saving {len(final_results)} {platform} results to database...", flush=True)
+            self.db.save_results(final_results)
+            return len(final_results)
+        return 0
 
-        if valid_texts:
-            total_data = len(valid_texts)
-            chunk_size = 50
-            all_predictions = []
-            print(f"Analyzing {total_data} items in batch...")
-            for i in range(0, total_data, chunk_size):
-                end_index = min(i + chunk_size, total_data)
-                batch = valid_texts[i:end_index]
+    def run_all(self, keyword, days_back=30):
+        print(f"Starting optimized scrape for '{keyword}'...", flush=True)
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        total_count = 0
+        
+        async def run_scrapers():
+            nonlocal total_count
+            with ThreadPoolExecutor() as executor:
+                # Start all scrapers in parallel
+                tasks = [
+                    (self.news_scraper.fetch_news, keyword, 1000),
+                    (self.tiktok_scraper.fetch_tiktok, keyword, 500),
+                    (self.youtube_scraper.search_and_fetch, keyword, 500),
+                    (self.twitter_scraper.fetch_tweets, keyword, 500)
+                ]
+                platforms = ['News', 'TikTok', 'YouTube', 'Twitter']
                 
-                print(f"⏳ Processing: {i} to {end_index} ({int(end_index/total_data*100)}%)")
-              
-                batch_preds = self.analyzer(batch, batch_size=16)
-                all_predictions.extend(batch_preds)
-            for i, item in enumerate(valid_items):
-                result = all_predictions[i]
-                final_results.append({
-                    "keyword": keyword,
-                    "platform": item['platform'],
-                    "author": item.get('author', 'Unknown'),
-                    "text_raw": item['text'],
-                    "text_clean": valid_texts[i],
-                    "label": result['label'],
-                    "score": round(result['score'] * 100, 2),
-                    "top_keyword": valid_texts[i].split()[:10],
-                    "published_date": item.get('published_date'),
-                    "created_at": datetime.now().isoformat()
-                })
-            if final_results:
-                print(f"Menyimpan {len(final_results)} data ke database...")
-                success = self.db.save_results(final_results)
+                futures = [loop.run_in_executor(executor, t[0], *t[1:]) for t in tasks]
+                
+                # As each one completes, process it immediately
+                for i, future in enumerate(asyncio.as_completed(futures)):
+                    try:
+                        result = await future
+                        platform = "Unknown"
+                        # Identify platform from result or index (as_completed loses order)
+                        # We'll use a wrapper or check result content
+                        if isinstance(result, list) and len(result) > 0:
+                            platform = result[0].get('platform', 'Unknown')
+                        elif isinstance(result, dict) and 'tweets' in result:
+                            platform = 'Twitter'
+                            result = result['tweets']
+                        
+                        # Fallback heuristic if empty or platform missing
+                        if platform == "Unknown":
+                            # This is tricky with as_completed, let's just use gather or sequential wait
+                            pass 
 
-                if success:
-                    print("Analisis selesai dan data berhasil disimpan!")
-                    return {"status": "success", "count": len(final_results)}
-                else:
-                    print("Gagal menyimpan data ke database.")
-                    return {"status": "error", "message": "Database insert failed"}
-        return {"status": "no_data", "message": "Tidak ada data valid untuk dianalisis"}
+                        count = await self.process_and_save(keyword, result, platform)
+                        total_count += count
+                    except Exception as e:
+                        print(f"Error in scraper/processor: {e}")
+
+        # Simpler approach: gather to maintain platform mapping but still parallel
+        async def run_parallel():
+            nonlocal total_count
+            with ThreadPoolExecutor() as executor:
+                tasks = [
+                    (self.news_scraper.fetch_news, keyword, 1000, 'News'),
+                    (self.tiktok_scraper.fetch_tiktok, keyword, 500, 'TikTok'),
+                    (self.youtube_scraper.search_and_fetch, keyword, 500, 'YouTube'),
+                    (self.twitter_scraper.fetch_tweets, keyword, 500, 'Twitter')
+                ]
+                
+                async def fetch_and_process(fn, kw, lim, plat):
+                    res = await loop.run_in_executor(executor, fn, kw, lim)
+                    if plat == 'Twitter' and isinstance(res, dict):
+                        res = res.get('tweets', [])
+                    return await self.process_and_save(keyword, res, plat)
+
+                results = await asyncio.gather(*[fetch_and_process(*t) for t in tasks])
+                total_count = sum(results)
+
+        loop.run_until_complete(run_parallel())
+        
+        if total_count > 0:
+            return {"status": "success", "count": total_count}
+        return {"status": "no_data", "message": "No data found"}

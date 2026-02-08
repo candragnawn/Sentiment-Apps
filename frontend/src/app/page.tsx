@@ -101,14 +101,14 @@ export default function HomePage() {
     stats.positive > stats.negative
       ? `Dominan sentimen positif (${positivePercent}%)`
       : `Dominan sentimen negatif (${negativePercent}%)`;
-  // const summary = useMemo(() => { // This was removed as sentimentSummary is sufficient
-  //   if (stats.total === 0) return "Menunggu data...";
-  //   const posPercent = ((stats.positive / stats.total) * 100).toFixed(1);
-  //   const negPercent = ((stats.negative / stats.total) * 100).toFixed(1);
-  //   return stats.positive > stats.negative
-  //     ? `Dominan positif (${posPercent}%)`
-  //     : `Dominan negatif (${negPercent}%)`;
-  // }, [stats]);
+  const summary = useMemo(() => { // This was removed as sentimentSummary is sufficient
+    if (stats.total === 0) return "Menunggu data...";
+    const posPercent = ((stats.positive / stats.total) * 100).toFixed(1);
+    const negPercent = ((stats.negative / stats.total) * 100).toFixed(1);
+    return stats.positive > stats.negative
+      ? `Dominan positif (${posPercent}%)`
+      : `Dominan negatif (${negPercent}%)`;
+  }, [stats]);
 
   const sentimentData = useMemo(
     () => [
@@ -146,7 +146,7 @@ export default function HomePage() {
   // };
 
   const platformDistribution = useMemo(() => {
-    const platforms = ["news", "twitter", "tiktok", "youtube"];
+    const platforms = ["News", "Twitter", "Tiktok", "Youtube"];
     return platforms.map((p) => ({
       label: p.charAt(0).toUpperCase() + p.slice(1),
       value: tableData.filter((i) => i.platform?.toLowerCase() === p).length,
@@ -201,7 +201,7 @@ export default function HomePage() {
           <WordCloudCard data={wordCloudData} />
         </div>
         <div className="md:col-span-4">
-          <ChartPieLegend
+          <ChartPieDonut
             title="Distribution platform"
             description="Distribusi Platform"
             chartData={platformDistribution}

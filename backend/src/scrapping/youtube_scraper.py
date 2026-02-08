@@ -3,10 +3,30 @@ from datetime import datetime
 
 class YoutubeScraper:
     def search_and_fetch(self, keyword, max_videos=500):
+        # Using full requested limit for broad data collectio
+        
+        class MyLogger:
+            def debug(self, msg): pass
+            def warning(self, msg): pass
+            def error(self, msg): pass
+
         opts = {
             'quiet': True,
-            'extract_flat': True, 
-            'force_generic_extractor': True,
+            'no_warnings': True,
+            'logger': MyLogger(),
+            'noprogress': True,
+            'extract_flat': 'in_playlist',
+            'force_generic_extractor': False,
+            'max_downloads': max_videos,
+            'noplaylist': True,
+            'ignoreerrors': True,
+            'no_check_certificate': True,
+            'format': 'worst',
+            'skip_download': True,
+            'num_retries': 0,
+            'no_color': True,
+            'lazy_playlist': True,
+            'cachedir': False,
         }
         results = []
         try:
@@ -20,16 +40,21 @@ class YoutubeScraper:
                         pub_date = None
                         if raw_date:
                             try:
+                                # yt-dlp upload_date is YYYYMMDD
                                 pub_date = datetime.strptime(raw_date, '%Y%m%d').isoformat()
-                            except: pass
+                            except: 
+                                pub_date = datetime.now().isoformat()
+                        else:
+                            pub_date = datetime.now().isoformat()
 
                         results.append({
                             'platform': 'YouTube',
                             'author': entry.get('uploader', 'Unknown'),
-                            'text': entry.get('title', ''),
-                            'url': entry.get('url', ''),
+                            'text': entry.get('title', '') + " " + (entry.get('description', '') or ""),
+                            'url': entry.get('webpage_url', entry.get('url', '')),
                             'published_date': pub_date
                         })
             return results
-        except Exception:
+        except Exception as e:
+            print(f"YouTube Scraper Error: {e}")
             return []

@@ -1,4 +1,5 @@
 import os
+import dateparser
 from supabase import create_client, client
 from datetime import datetime, timedelta
 
@@ -129,24 +130,48 @@ class SentimentDatabase:
             print(f"Error fetching stats: {e}")
             return {"total": 0, "positive": 0, "negative": 0, "neutral": 0}
 
-    def fetch_chart_data(self, days=30, keyword=None):
+    def fetch_chart_data(self, days=30, keyword=None, group_by='day'):
         try:
+            import dateparser
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
             data = self.fetch_data_by_date_range(start_date, end_date, keyword)
             
+            print(f"DEBUG DB - Chart data fetched: {len(data)} items for keyword: {keyword}")
             grouped = {}
             for item in data:
-                date_str = item['created_at'].split('T')[0]
+                # Use published_date if available, else created_at
+                raw_date = item.get('published_date') or item.get('created_at')
+                date_obj = None
+                if raw_date:
+                    try:
+                        date_obj = dateparser.parse(str(raw_date))
+                    except:
+                        pass
+                
+                if not date_obj:
+                    date_obj = datetime.now()
+                
+                if group_by == 'month':
+                    date_str = date_obj.strftime('%Y-%m')
+                elif group_by == 'year':
+                    date_str = date_obj.strftime('%Y')
+                else: # day
+                    date_str = date_obj.strftime('%Y-%m-%d')
+
                 if date_str not in grouped:
                     grouped[date_str] = {"date": date_str, "positive": 0, "negative": 0, "neutral": 0, "total": 0}
                 
-                label = item['label']
+                label = item.get('label', '').lower()
                 if label in grouped[date_str]:
                     grouped[date_str][label] += 1
                 grouped[date_str]["total"] += 1
             
-            return sorted(grouped.values(), key=lambda x: x['date'])
+            result = sorted(grouped.values(), key=lambda x: x['date'])
+            print(f"DEBUG DB - Grouped into {len(result)} {group_by}s")
+            return result
         except Exception as e:
             print(f"Error fetching chart: {e}")
+            import traceback
+            traceback.print_exc()
             return []
