@@ -23,7 +23,7 @@ export function WordCloudCard({
       <CardContent>
         <WorldCloud
           data={data}
-          width={1800}
+          width={2500}
           height={600}
           font="inter"
           fontWeight="bold"

@@ -67,7 +67,7 @@ export default function HomePage() {
         fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, {
           cache: "no-store",
         }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/list${query}${query ? '&' : '?'}page_size=200`, {
+        fetch(`http://127.0.0.1:8000/api/sentiment/list${query}${query ? '&' : '?'}page_size=500`, {
           cache: "no-store",
         }),
         fetch(`http://127.0.0.1:8000/api/sentiment/platform-stats${query}`, {

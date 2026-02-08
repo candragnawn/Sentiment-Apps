@@ -55,7 +55,7 @@ async def get_list(
     keyword: Optional[str] = None,
     days: Optional[int] = Query(None),
     page: int = Query(1),
-    page_size: int = Query(100)
+    page_size: int = Query(500)
 ):
     if days:
         end = datetime.now()
@@ -76,14 +76,15 @@ async def get_chart(days: int = Query(30), keyword: Optional[str] = None, group_
 async def start_analysis(
     keyword: str, 
     background_tasks: BackgroundTasks, 
-    days_back: int = 30  
+    days_back: int = 30,
+    max_results: int = 500
 ):
     print(f"DEBUG - Received analysis request for keyword: {keyword}", flush=True)
     if analyzer is None:
         print("DEBUG - Analyzer is still None!", flush=True)
         return {"status": "error", "message": "Analyzer belum siap, mohon tunggu sebentar lagi."}
     
-    background_tasks.add_task(analyzer.run_all, keyword, days_back)
+    background_tasks.add_task(analyzer.run_all, keyword, days_back, max_results)
     print(f"DEBUG - Task added to background for keyword: {keyword}", flush=True)
     return {"status": "processing", "message": "Analisis dimulai di background"}
 

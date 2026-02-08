@@ -59,7 +59,7 @@ class TwitterScraper:
                     break
                 cursor = new_cursor
                 
-                if len(page_tweets) < 5: # Threshold for stopping
+                if len(page_tweets) < 2: # More relaxed threshold
                     break
                     
             except Exception as e:

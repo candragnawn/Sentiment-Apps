@@ -24,7 +24,7 @@ class SentimentDatabase:
 
     def save_results(self, data_dict):
         try:
-            chunk_size = 100
+            chunk_size = 500
             for i in range(0, len(data_dict), chunk_size):
                 chunk = data_dict[i:i + chunk_size]
                 self.supabase.table('sentiments').insert(chunk).execute()

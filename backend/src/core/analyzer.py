@@ -43,10 +43,8 @@ class sentimentAnalyzer:
                 text = item['text']
                 author = item.get('author', 'Unknown')
             elif platform == 'Twitter':
-                text = item.get('legacy', {}).get('full_text') or item.get('text', '')
-                try:
-                    author = item.get('core', {}).get('user_results', {}).get('result', {}).get('legacy', {}).get('screen_name', 'Unknown')
-                except: pass
+                text = item.get('text', '')
+                author = item.get('author', 'Unknown')
             
             if not text: continue
             
@@ -100,7 +98,7 @@ class sentimentAnalyzer:
             return len(final_results)
         return 0
 
-    def run_all(self, keyword, days_back=30):
+    def run_all(self, keyword, days_back=30, max_results=500):
         print(f"Starting optimized scrape for '{keyword}'...", flush=True)
         
         loop = asyncio.new_event_loop()
@@ -150,10 +148,10 @@ class sentimentAnalyzer:
             nonlocal total_count
             with ThreadPoolExecutor() as executor:
                 tasks = [
-                    (self.news_scraper.fetch_news, keyword, 1000, 'News'),
-                    (self.tiktok_scraper.fetch_tiktok, keyword, 500, 'TikTok'),
-                    (self.youtube_scraper.search_and_fetch, keyword, 500, 'YouTube'),
-                    (self.twitter_scraper.fetch_tweets, keyword, 500, 'Twitter')
+                    (self.news_scraper.fetch_news, keyword, max_results, 'News'),
+                    (self.tiktok_scraper.fetch_tiktok, keyword, max_results, 'TikTok'),
+                    (self.youtube_scraper.search_and_fetch, keyword, max_results, 'YouTube'),
+                    (self.twitter_scraper.fetch_tweets, keyword, max_results, 'Twitter')
                 ]
                 
                 async def fetch_and_process(fn, kw, lim, plat):
