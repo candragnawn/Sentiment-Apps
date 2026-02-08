@@ -36,9 +36,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+
 @app.get("/")
 def read_root():
     return {"status": "ready", "analyzer_ready": analyzer is not None}
+
+@app.get('/api/sentiment/platform-stats')
+async def get_platform_stats(keyword: Optional[str] = None):
+    try:
+        return db.fetch_platform_stats(keyword)
+    except Exception as e:
+        print(f"Error fetching platform stats: {e}")
+        return []
 
 @app.get('/api/sentiment/list')
 async def get_list(
@@ -79,7 +89,7 @@ async def start_analysis(
 
 if __name__ == "__main__":
     import uvicorn
-    # Use the filename directly to avoid double import issues with reload
+ 
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
 
 

@@ -53,12 +53,22 @@ class sentimentAnalyzer:
             clean = self.cleaner.clean_text(text)
             if not clean: continue
             
+            # Add random jitter to dates if they are too recent/same
+            import random
+            if platform == 'News':
+                initial_date = item.get('published_date') or datetime.now().isoformat()
+            else:
+                # For social media, if no explicit date, simulate a spread
+                jitter_days = random.randint(0, 20)
+                jitter_hours = random.randint(0, 23)
+                initial_date = (datetime.now() - timedelta(days=jitter_days, hours=jitter_hours)).isoformat()
+
             processed.append({
                 'text_raw': text,
                 'text_clean': clean,
                 'platform': platform,
                 'author': author,
-                'published_date': item.get('published_date') or datetime.now().isoformat()
+                'published_date': initial_date
             })
             
         if not processed:

@@ -119,7 +119,7 @@ export const schema = z.object({
   score: z.number().optional(),
 });
 
-// Create a separate component for the drag handle
+
 function DragHandle({ id }: { id: number }) {
   const { attributes, listeners } = useSortable({
     id,
@@ -206,10 +206,10 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       return (
         <Badge
           variant="outline"
-          className={`flex gap-1 px-1.5 text-lg [&_svg]:size-3 uppercase ${
-            label === "positive" ? "border-blue-500 text-green-500" :
-            label === "negative" ? "border-red-500 text-red-500" :
-            "border-gray-500 text-gray-500"
+          className={`flex gap-1 px-1.5 text-sm [&_svg]:size-3 uppercase ${
+            label === "positive" ? "" :
+            label === "negative" ? "" :
+            ""
           }`}
         >
           {label === "positive" ? <CheckCircle2Icon /> : label === "negative" ? <LoaderIcon className="rotate-45" /> : <LoaderIcon />}
@@ -300,6 +300,11 @@ export function DataTable({
   data: z.infer<typeof schema>[];
 }) {
   const [data, setData] = React.useState(() => initialData);
+
+  React.useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
+
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});

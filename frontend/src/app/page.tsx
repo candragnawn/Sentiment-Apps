@@ -49,6 +49,7 @@ export default function HomePage() {
     neutral: 0,
   });
   const [chartData, setChartData] = useState<any[]>([]);
+  const [platformData, setPlatformData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const searchParams = useSearchParams();
@@ -59,28 +60,32 @@ export default function HomePage() {
     try {
       const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
 
-      const [statsRes, chartRes, tableRes] = await Promise.all([
+      const [statsRes, chartRes, tableRes, platformRes] = await Promise.all([
         fetch(`http://127.0.0.1:8000/api/sentiment/stats${query}`, {
           cache: "no-store",
         }),
         fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, {
           cache: "no-store",
         }),
-        fetch(
-          `http://127.0.0.1:8000/api/sentiment/list${query}&page_size=200`,
-          { cache: "no-store" },
-        ),
+        fetch(`http://127.0.0.1:8000/api/sentiment/list${query}${query ? '&' : '?'}page_size=200`, {
+          cache: "no-store",
+        }),
+        fetch(`http://127.0.0.1:8000/api/sentiment/platform-stats${query}`, {
+          cache: "no-store",
+        }),
       ]);
 
-      const [statsJson, chartJson, tableJson] = await Promise.all([
+      const [statsJson, chartJson, tableJson, platformJson] = await Promise.all([
         statsRes.json(),
         chartRes.json(),
         tableRes.json(),
+        platformRes.json(),
       ]);
 
       setStats(statsJson);
       setChartData(chartJson);
       setTableData(Array.isArray(tableJson) ? tableJson : tableJson.data || []);
+      setPlatformData(platformJson);
     } catch (error) {
       console.error("Failed to load dashboard data", error);
     } finally {
@@ -101,7 +106,7 @@ export default function HomePage() {
     stats.positive > stats.negative
       ? `Dominan sentimen positif (${positivePercent}%)`
       : `Dominan sentimen negatif (${negativePercent}%)`;
-  const summary = useMemo(() => { // This was removed as sentimentSummary is sufficient
+  const summary = useMemo(() => { 
     if (stats.total === 0) return "Menunggu data...";
     const posPercent = ((stats.positive / stats.total) * 100).toFixed(1);
     const negPercent = ((stats.negative / stats.total) * 100).toFixed(1);
@@ -146,13 +151,20 @@ export default function HomePage() {
   // };
 
   const platformDistribution = useMemo(() => {
-    const platforms = ["News", "Twitter", "Tiktok", "Youtube"];
+    if (platformData && platformData.length > 0) {
+      // Ensure labeling matches chartConfig keys (lowercase)
+      return platformData.map(item => ({
+        ...item,
+        label: item.label.toLowerCase()
+      }));
+    }
+    const platforms = ["news", "twitter", "tiktok", "youtube"];
     return platforms.map((p) => ({
-      label: p.charAt(0).toUpperCase() + p.slice(1),
-      value: tableData.filter((i) => i.platform?.toLowerCase() === p).length,
+      label: p,
+      value: tableData.filter((i) => i.platform?.toLowerCase().trim() === p).length,
       fill: `var(--color-${p})`,
     }));
-  }, [tableData]);
+  }, [platformData, tableData]);
 
   const wordCloudData = useMemo(() => {
     const wordMap = new Map<string, number>();
@@ -209,12 +221,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
+      {/* <div className="flex flex-col gap-6">
         <DataTable data={tableData} />
         <div className="w-full">
           <ChartLineInteractive />
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

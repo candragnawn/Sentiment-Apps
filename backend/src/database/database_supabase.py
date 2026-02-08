@@ -4,24 +4,23 @@ from supabase import create_client, client
 from datetime import datetime, timedelta
 
 class SentimentDatabase:
+    def __init__(self):
+        url: str = "https://fbkfqsqqkxobmdefokjz.supabase.co"
+        key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2Zxc3Fxa3hvYm1kZWZva2p6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODkyMjg2MywiZXhwIjoyMDg0NDk4ODYzfQ.5tdJc8WIqnt9F9kPUrQEIiKQmszAlzs1OVQtFROxFiM"
+        self.supabase: client = create_client(url, key)
+
     def check_existing_keyword(self, keyword):
         try:
-          
             res = self.supabase.table("sentiments") \
                 .select("id") \
                 .eq("keyword", keyword) \
                 .limit(1) \
                 .execute()
             
-      
             return len(res.data) > 0
         except Exception as e:
             print(f"Error checking cache: {e}")
             return False
-    def __init__(self):
-        url: str ="https://fbkfqsqqkxobmdefokjz.supabase.co"
-        key: str ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2Zxc3Fxa3hvYm1kZWZva2p6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODkyMjg2MywiZXhwIjoyMDg0NDk4ODYzfQ.5tdJc8WIqnt9F9kPUrQEIiKQmszAlzs1OVQtFROxFiM"
-        self.supabase: client = create_client(url, key)
 
     def save_results(self, data_dict):
         try:
@@ -32,6 +31,7 @@ class SentimentDatabase:
             return True
         except Exception as e:
             print(f"Error saving to supabase: {e}")
+            return False
     
     def hapus_semua_data(self):
         try:
@@ -40,28 +40,49 @@ class SentimentDatabase:
             print(f"Error deleting from supabase: {e}")
 
     def fetch_all_data(self, keyword=None):
-       try:
-        query = self.supabase.table('sentiments').select("*")
-        if keyword:
-            query = query.eq('keyword', keyword)
-        response = query.execute()
-        return response.data
-       except Exception as e:
-        print(f"Error fetching all data: {e}")
-        return []
+        try:
+            query = self.supabase.table('sentiments').select("*")
+            if keyword:
+                query = query.eq('keyword', keyword)
+            response = query.execute()
+            return response.data
+        except Exception as e:
+            print(f"Error fetching all data: {e}")
+            return []
     
     def fetch_data_by_date_range(self, start_date, end_date, keyword=None):
         try:
-            query = self.supabase.table('sentiments').select("*")
-            query = query.gte('created_at', start_date.isoformat())
-            query = query.lte('created_at', end_date.isoformat())
+            all_data = []
+            page_size = 1000
+            offset = 0
             
-            if keyword:
-                query = query.eq('keyword', keyword)
-            
-            query = query.order('created_at', desc=True)
-            response = query.execute()
-            return response.data
+            while True:
+                query = self.supabase.table('sentiments').select("*")
+                query = query.gte('published_date', start_date.isoformat())
+                query = query.lte('published_date', end_date.isoformat())
+                
+                if keyword:
+                    query = query.eq('keyword', keyword)
+                
+                query = query.order('published_date', desc=True)
+                query = query.range(offset, offset + page_size - 1)
+                
+                response = query.execute()
+                data = response.data
+                
+                if not data:
+                    break
+                    
+                all_data.extend(data)
+                if len(data) < page_size:
+                    break
+                
+                offset += page_size
+                # Safety break at 20k rows
+                if offset >= 20000:
+                    break
+                    
+            return all_data
         except Exception as e:
             print(f"Error fetching by range: {e}")
             return []
@@ -80,7 +101,35 @@ class SentimentDatabase:
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365)
         return self.fetch_data_by_date_range(start_date, end_date, keyword)
-    
+
+    def fetch_platform_stats(self, keyword=None):
+        try:
+            query = self.supabase.table('sentiments').select('platform')
+            if keyword:
+                query = query.eq("keyword", keyword)
+            
+            # Increase limit to handle more data for accurate distribution
+            result = query.limit(10000).execute()
+            data = result.data
+            
+            counts = {}
+            for item in data:
+                # Use lowercase for consistent mapping
+                p = item.get('platform', 'unknown').lower()
+                counts[p] = counts.get(p, 0) + 1
+
+            formatted_stats = []
+            for platform, count in counts.items(): 
+                formatted_stats.append({
+                    "label": platform, # Keep it lowercase to match chartConfig keys
+                    "value": count,
+                    "fill": f"var(--color-{platform})"
+                })
+            return formatted_stats
+        except Exception as e:
+            print(f"Error fetching platform stats: {e}")
+            return []
+
     def fetch_paginated(self, page=1, page_size=20, keyword=None):
         try:
             offset = (page - 1) * page_size
@@ -113,12 +162,12 @@ class SentimentDatabase:
 
     def fetch_stats(self, keyword=None):
         try:
-            query = self.supabase.table('sentiments').select("label", count='exact')
+            query = self.supabase.table('sentiments').select("label")
             if keyword:
                 query = query.eq('keyword', keyword)
             
             response = query.execute()
-            labels = [item['label'] for item in response.data]
+            labels = [item['label'].lower() for item in response.data]
             
             return {
                 "total": len(labels),
@@ -132,15 +181,36 @@ class SentimentDatabase:
 
     def fetch_chart_data(self, days=30, keyword=None, group_by='day'):
         try:
-            import dateparser
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
             data = self.fetch_data_by_date_range(start_date, end_date, keyword)
             
-            print(f"DEBUG DB - Chart data fetched: {len(data)} items for keyword: {keyword}")
             grouped = {}
+         
+            curr = start_date
+            while curr <= end_date:
+                if group_by == 'month':
+                    date_str = curr.strftime('%Y-%m')
+                elif group_by == 'year':
+                    date_str = curr.strftime('%Y')
+                else:
+                    date_str = curr.strftime('%Y-%m-%d')
+                
+                if date_str not in grouped:
+                    grouped[date_str] = {"date": date_str, "positive": 0, "negative": 0, "neutral": 0, "total": 0}
+                
+                if group_by == 'month':
+                 
+                    next_month = curr.month % 12 + 1
+                    next_year = curr.year + (curr.month // 12)
+                    curr = curr.replace(year=next_year, month=next_month, day=1)
+                elif group_by == 'year':
+                    curr = curr.replace(year=curr.year + 1, month=1, day=1)
+                else:
+                    curr += timedelta(days=1)
+
             for item in data:
-                # Use published_date if available, else created_at
+            # Prioritize published_date for the chart's timeline
                 raw_date = item.get('published_date') or item.get('created_at')
                 date_obj = None
                 if raw_date:
@@ -150,28 +220,23 @@ class SentimentDatabase:
                         pass
                 
                 if not date_obj:
-                    date_obj = datetime.now()
+                    # If parsing fails, skip or use created_at if available
+                    continue
                 
                 if group_by == 'month':
                     date_str = date_obj.strftime('%Y-%m')
                 elif group_by == 'year':
                     date_str = date_obj.strftime('%Y')
-                else: # day
+                else: 
                     date_str = date_obj.strftime('%Y-%m-%d')
 
-                if date_str not in grouped:
-                    grouped[date_str] = {"date": date_str, "positive": 0, "negative": 0, "neutral": 0, "total": 0}
-                
-                label = item.get('label', '').lower()
-                if label in grouped[date_str]:
-                    grouped[date_str][label] += 1
-                grouped[date_str]["total"] += 1
+                if date_str in grouped:
+                    label = item.get('label', '').lower()
+                    if label in grouped[date_str]:
+                        grouped[date_str][label] += 1
+                    grouped[date_str]["total"] += 1
             
-            result = sorted(grouped.values(), key=lambda x: x['date'])
-            print(f"DEBUG DB - Grouped into {len(result)} {group_by}s")
-            return result
+            return sorted(grouped.values(), key=lambda x: x['date'])
         except Exception as e:
             print(f"Error fetching chart: {e}")
-            import traceback
-            traceback.print_exc()
             return []
