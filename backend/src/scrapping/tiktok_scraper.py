@@ -16,8 +16,6 @@ class TiktokScrapper:
         all_results = []
         cursor = 0 
         
-        print(f"DEBUG: Starting TikTok scrape for '{keyword}' limit {limit}", flush=True)
-
         while len(all_results) < limit:
             params = {
                 "keyword": keyword,
@@ -37,7 +35,6 @@ class TiktokScrapper:
     
                 raw_data = data.get('data', [])
                 if not raw_data:
-                    print(f"DEBUG: No more TikTok results found, stopping at {len(all_results)}", flush=True)
                     break
                 
                 page_results = []
@@ -55,15 +52,13 @@ class TiktokScrapper:
                         })
                 
                 all_results.extend(page_results)
-                print(f"DEBUG: Fetched {len(all_results)} TikTok items so far", flush=True)
                 
-                # Pagination using cursor from response
                 new_cursor = data.get('cursor')
                 if new_cursor == cursor or not new_cursor:
                     break
                 cursor = new_cursor
 
-                if len(raw_data) < 5: # Threshold for stopping
+                if len(raw_data) < 5:
                     break
                     
             except Exception as e:

@@ -15,8 +15,6 @@ class TwitterScraper:
         all_tweets = []
         cursor = None
         
-        print(f"DEBUG: Starting Twitter scrape for '{keyword}' limit {limit}", flush=True)
-
         while len(all_tweets) < limit:
             params = {
                 "query": keyword, 
@@ -34,10 +32,8 @@ class TwitterScraper:
                 data = response.json()
                 page_tweets = []
                 
-                # New structure parsing based on user's JSON example
                 raw_data = data.get('data', [])
                 for item in raw_data:
-                    # Map the new structure to our expected internal format
                     author_data = item.get('author', {})
                     page_tweets.append({
                         'text': item.get('text'),
@@ -47,19 +43,16 @@ class TwitterScraper:
                     })
                 
                 if not page_tweets:
-                    print(f"DEBUG: No more tweets found, stopping at {len(all_tweets)}", flush=True)
                     break
                     
                 all_tweets.extend(page_tweets)
-                print(f"DEBUG: Fetched {len(all_tweets)} tweets so far", flush=True)
                 
-                # Pagination using pagination.nextCursor from response
                 new_cursor = data.get('pagination', {}).get('nextCursor')
                 if not new_cursor or new_cursor == cursor:
                     break
                 cursor = new_cursor
                 
-                if len(page_tweets) < 2: # More relaxed threshold
+                if len(page_tweets) < 2:
                     break
                     
             except Exception as e:

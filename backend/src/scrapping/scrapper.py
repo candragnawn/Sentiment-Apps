@@ -31,7 +31,6 @@ class NewsScraper:
                     pub_date_str = item.find('pubDate').text if item.find('pubDate') else None
                     pub_date = None
                     if pub_date_str:
-                        # Google News RSS usually uses RFC 822 format: "Fri, 07 Feb 2025 12:00:00 GMT"
                         pub_date = dateparser.parse(pub_date_str)
                     
                     if pub_date:

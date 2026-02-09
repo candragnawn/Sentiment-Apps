@@ -3,7 +3,6 @@ from datetime import datetime
 
 class YoutubeScraper:
     def search_and_fetch(self, keyword, max_videos=500):
-        # Using full requested limit for broad data collectio
         
         class MyLogger:
             def debug(self, msg): pass
@@ -40,7 +39,6 @@ class YoutubeScraper:
                         pub_date = None
                         if raw_date:
                             try:
-                                # yt-dlp upload_date is YYYYMMDD
                                 pub_date = datetime.strptime(raw_date, '%Y%m%d').isoformat()
                             except: 
                                 pub_date = datetime.now().isoformat()

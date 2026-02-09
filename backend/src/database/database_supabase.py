@@ -1,23 +1,57 @@
 import os
 import dateparser
-from supabase import create_client, client
+import requests
 from datetime import datetime, timedelta
+from typing import List, Dict, Optional
 
 class SentimentDatabase:
+    
     def __init__(self):
-        url: str = "https://fbkfqsqqkxobmdefokjz.supabase.co"
-        key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2Zxc3Fxa3hvYm1kZWZva2p6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODkyMjg2MywiZXhwIjoyMDg0NDk4ODYzfQ.5tdJc8WIqnt9F9kPUrQEIiKQmszAlzs1OVQtFROxFiM"
-        self.supabase: client = create_client(url, key)
+        self.url = "https://fbkfqsqqkxobmdefokjz.supabase.co"
+        self.key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZia2Zxc3Fxa3hvYm1kZWZva2p6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODkyMjg2MywiZXhwIjoyMDg0NDk4ODYzfQ.5tdJc8WIqnt9F9kPUrQEIiKQmszAlzs1OVQtFROxFiM"
+        self.base_url = f"{self.url}/rest/v1"
+        self.headers = {
+            "apikey": self.key,
+            "Authorization": f"Bearer {self.key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+        }
+
+    def _get(self, endpoint: str, params: dict = None) -> dict:
+        try:
+            response = requests.get(f"{self.base_url}/{endpoint}", headers=self.headers, params=params, timeout=30)
+            response.raise_for_status()
+            count = response.headers.get('Content-Range', '').split('/')[-1]
+            return {
+                'data': response.json(),
+                'count': int(count) if count and count.isdigit() else None
+            }
+        except Exception as e:
+            print(f"GET Error: {e}")
+            return {'data': [], 'count': 0}
+
+    def _post(self, endpoint: str, data: list) -> bool:
+        try:
+            response = requests.post(f"{self.base_url}/{endpoint}", headers=self.headers, json=data, timeout=30)
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            print(f"POST Error: {e}")
+            return False
+
+    def _delete(self, endpoint: str, params: dict = None) -> bool:
+        try:
+            response = requests.delete(f"{self.base_url}/{endpoint}", headers=self.headers, params=params, timeout=30)
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            print(f"DELETE Error: {e}")
+            return False
 
     def check_existing_keyword(self, keyword):
         try:
-            res = self.supabase.table("sentiments") \
-                .select("id") \
-                .eq("keyword", keyword) \
-                .limit(1) \
-                .execute()
-            
-            return len(res.data) > 0
+            result = self._get("sentiments", {"keyword": f"eq.{keyword}", "select": "id", "limit": "1"})
+            return len(result['data']) > 0
         except Exception as e:
             print(f"Error checking cache: {e}")
             return False
@@ -27,7 +61,8 @@ class SentimentDatabase:
             chunk_size = 500
             for i in range(0, len(data_dict), chunk_size):
                 chunk = data_dict[i:i + chunk_size]
-                self.supabase.table('sentiments').insert(chunk).execute()
+                if not self._post("sentiments", chunk):
+                    return False
             return True
         except Exception as e:
             print(f"Error saving to supabase: {e}")
@@ -35,17 +70,17 @@ class SentimentDatabase:
     
     def hapus_semua_data(self):
         try:
-            self.supabase.table('sentiments').delete().neq('id', 0).execute()
+            self._delete("sentiments", {"id": "neq.0"})
         except Exception as e:
             print(f"Error deleting from supabase: {e}")
 
     def fetch_all_data(self, keyword=None):
         try:
-            query = self.supabase.table('sentiments').select("*")
+            params = {"select": "*"}
             if keyword:
-                query = query.eq('keyword', keyword)
-            response = query.execute()
-            return response.data
+                params["keyword"] = f"eq.{keyword}"
+            result = self._get("sentiments", params)
+            return result['data']
         except Exception as e:
             print(f"Error fetching all data: {e}")
             return []
@@ -57,18 +92,20 @@ class SentimentDatabase:
             offset = 0
             
             while True:
-                query = self.supabase.table('sentiments').select("*")
-                query = query.gte('published_date', start_date.isoformat())
-                query = query.lte('published_date', end_date.isoformat())
+                params = {
+                    "select": "*",
+                    "published_date": f"gte.{start_date.isoformat()}",
+                    "published_date": f"lte.{end_date.isoformat()}",
+                    "order": "published_date.desc",
+                    "offset": str(offset),
+                    "limit": str(page_size)
+                }
                 
                 if keyword:
-                    query = query.eq('keyword', keyword)
+                    params["keyword"] = f"eq.{keyword}"
                 
-                query = query.order('published_date', desc=True)
-                query = query.range(offset, offset + page_size - 1)
-                
-                response = query.execute()
-                data = response.data
+                result = self._get("sentiments", params)
+                data = result['data']
                 
                 if not data:
                     break
@@ -78,7 +115,6 @@ class SentimentDatabase:
                     break
                 
                 offset += page_size
-                # Safety break at 20k rows
                 if offset >= 20000:
                     break
                     
@@ -104,24 +140,22 @@ class SentimentDatabase:
 
     def fetch_platform_stats(self, keyword=None):
         try:
-            query = self.supabase.table('sentiments').select('platform')
+            params = {"select": "platform", "limit": "10000"}
             if keyword:
-                query = query.eq("keyword", keyword)
+                params["keyword"] = f"eq.{keyword}"
             
-            # Increase limit to handle more data for accurate distribution
-            result = query.limit(10000).execute()
-            data = result.data
+            result = self._get("sentiments", params)
+            data = result['data']
             
             counts = {}
             for item in data:
-                # Use lowercase for consistent mapping
                 p = item.get('platform', 'unknown').lower()
                 counts[p] = counts.get(p, 0) + 1
 
             formatted_stats = []
             for platform, count in counts.items(): 
                 formatted_stats.append({
-                    "label": platform, # Keep it lowercase to match chartConfig keys
+                    "label": platform,
                     "value": count,
                     "fill": f"var(--color-{platform})"
                 })
@@ -133,24 +167,28 @@ class SentimentDatabase:
     def fetch_paginated(self, page=1, page_size=20, keyword=None):
         try:
             offset = (page - 1) * page_size
-            query = self.supabase.table('sentiments').select("*")
+            params = {
+                "select": "*",
+                "order": "created_at.desc",
+                "offset": str(offset),
+                "limit": str(page_size)
+            }
             
             if keyword:
-                query = query.eq('keyword', keyword)
+                params["keyword"] = f"eq.{keyword}"
             
-            query = query.range(offset, offset + page_size - 1)
-            query = query.order('created_at', desc=True)
-            response = query.execute()
+            result = self._get("sentiments", params)
             
-            count_query = self.supabase.table('sentiments').select("id", count='exact')
+            count_params = {"select": "id"}
             if keyword:
-                count_query = count_query.eq('keyword', keyword)
-            count_response = count_query.execute()
-            
-            total = count_response.count if hasattr(count_response, 'count') else 0
+                count_params["keyword"] = f"eq.{keyword}"
+            count_headers = self.headers.copy()
+            count_headers["Prefer"] = "count=exact"
+            count_response = requests.head(f"{self.base_url}/sentiments", headers=count_headers, params=count_params, timeout=30)
+            total = int(count_response.headers.get('Content-Range', '0-0/0').split('/')[-1])
             
             return {
-                'data': response.data,
+                'data': result['data'],
                 'total': total,
                 'page': page,
                 'page_size': page_size,
@@ -162,12 +200,12 @@ class SentimentDatabase:
 
     def fetch_stats(self, keyword=None):
         try:
-            query = self.supabase.table('sentiments').select("label")
+            params = {"select": "label"}
             if keyword:
-                query = query.eq('keyword', keyword)
+                params["keyword"] = f"eq.{keyword}"
             
-            response = query.execute()
-            labels = [item['label'].lower() for item in response.data]
+            result = self._get("sentiments", params)
+            labels = [item['label'].lower() for item in result['data']]
             
             return {
                 "total": len(labels),
@@ -186,7 +224,7 @@ class SentimentDatabase:
             data = self.fetch_data_by_date_range(start_date, end_date, keyword)
             
             grouped = {}
-         
+          
             curr = start_date
             while curr <= end_date:
                 if group_by == 'month':
@@ -200,7 +238,6 @@ class SentimentDatabase:
                     grouped[date_str] = {"date": date_str, "positive": 0, "negative": 0, "neutral": 0, "total": 0}
                 
                 if group_by == 'month':
-                 
                     next_month = curr.month % 12 + 1
                     next_year = curr.year + (curr.month // 12)
                     curr = curr.replace(year=next_year, month=next_month, day=1)
@@ -210,7 +247,6 @@ class SentimentDatabase:
                     curr += timedelta(days=1)
 
             for item in data:
-            # Prioritize published_date for the chart's timeline
                 raw_date = item.get('published_date') or item.get('created_at')
                 date_obj = None
                 if raw_date:
@@ -220,7 +256,6 @@ class SentimentDatabase:
                         pass
                 
                 if not date_obj:
-                    # If parsing fails, skip or use created_at if available
                     continue
                 
                 if group_by == 'month':
