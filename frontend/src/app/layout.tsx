@@ -52,7 +52,7 @@ export default function RootLayout({
                 <header className="sticky top-0 z-50 flex h-10 items-center gap-2 bg-background px-5">
                   <SidebarTrigger className="-ml-1" />
                   <div className="mx-auto p-2">
-                    <InputInline />
+                   
                   </div>
                 </header>
                 <main className="flex-1 overflow-y-auto">{children}</main>

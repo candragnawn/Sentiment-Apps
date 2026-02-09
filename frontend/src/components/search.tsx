@@ -21,7 +21,7 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
     setLoading(true);
     onStart?.();
     try {
-      router.push("/?keyword=" + encodeURIComponent(keyword));
+      router.push("/dashboard?keyword=" + encodeURIComponent(keyword));
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
