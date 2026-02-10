@@ -145,7 +145,7 @@ export default function DashboardPage() {
           Sentimen dari <span className="text-primary">{keyword}</span>
         </h1>
         <p className="text-muted-foreground">
-          Ringkasan analisis sentimen lintas platform secara real-time.
+          Ringkasan analisis sentimen lintas {keyword}platform secara real-time.
         </p>
       </div>
 

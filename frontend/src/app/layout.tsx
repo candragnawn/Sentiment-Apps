@@ -8,7 +8,6 @@ import {
 } from "@/src/components/ui/sidebar";
 import { AppSidebar } from "@/src/components/app-sidebar";
 import { ThemeProvider } from "@/src/components/theme-provider";
-import { ModeToggle } from "@/src/components/mode-togle";
 import { InputInline } from "@/src/components/search";
 import { SiteHeader } from "@/src/components/site-header";
 
@@ -47,9 +46,6 @@ export default function RootLayout({
             <SidebarProvider defaultOpen={true}>
               <AppSidebar />
               <SidebarInset>
-                <div className="ml-auto absolute top-4 right-4 z-[60]">
-                  <ModeToggle />
-                </div>
                 <SiteHeader />
                 <main className="flex-1 overflow-y-auto">{children}</main>
               </SidebarInset>
