@@ -56,7 +56,7 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
     }
   };
   return (
-    <Field orientation="horizontal">
+    <Field orientation="horizontal" className="w-full gap-3">
       <Input
         type="search"
         placeholder="Search Keyword..."

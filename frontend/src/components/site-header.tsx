@@ -37,9 +37,7 @@ export function SiteHeader() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="flex item-center justify-center ">
-        <InputInline />
-      </div>
+     
       <div className="flex items-center p-8">
         <ModeToggle />
       </div>
