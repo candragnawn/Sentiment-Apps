@@ -62,7 +62,7 @@ export function InputInline({ onStart, onComplete }: InputInlineProps) {
         placeholder="Search Keyword..."
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
-        className="bg-transparent border border-border px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-ring min-w-[300px]"
+        className="bg-transparent border border-border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring min-w-[300px] "
       />
       <Button
         onClick={handleSearch}

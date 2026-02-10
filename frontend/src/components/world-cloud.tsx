@@ -30,9 +30,9 @@ export function WordCloudCard({
           fontSize={(word) => Math.log2(word.value + 1) * 20}
           spiral="rectangular"
           rotate={() => 0}
-          padding={4}
+          padding={5}
           fill={(d, i) => {
-            const colors = ["#3b82f6", "#60a5fa", "#93c5fd", "#ffffff"];
+            const colors = ["#1d4ed8", "#3b82f6" ,"#60a5fa", "#e2e8f0"];
             return colors[i % colors.length];
           }}
         />

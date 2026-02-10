@@ -171,13 +171,13 @@ export default function DashboardPage() {
         </div>
 
         <div className="md:col-span-8">
-          <ChartAreaInteractive data={chartData} />
+          <WordCloudCard data={wordCloudData} />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-8">
-          <WordCloudCard data={wordCloudData} />
+          <ChartAreaInteractive data={chartData} />
         </div>
         <div className="md:col-span-4">
           <ChartPieDonut
