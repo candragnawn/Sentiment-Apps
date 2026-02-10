@@ -18,7 +18,7 @@ const DataTable = dynamic(
 const ChartPieDonut = dynamic(
   () =>
     import("@/src/components/chart-pie-donut").then((mod) => mod.ChartPieDonut),
-  { ssr: false },
+  { ssr: false }, 
 );
 const WordCloudCard = dynamic(
   () => import("@/src/components/world-cloud").then((mod) => mod.WordCloudCard),

@@ -21,22 +21,16 @@ import { positive } from "zod"
 
 export const description = "A donut chart"
 
-const chartData = [
-  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-  { browser: "firefox", visitors: 187, fill: "var(--color-firefox)" },
-  { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
-  { browser: "other", visitors: 90, fill: "var(--color-other)" },
-]
+
 
 const chartConfig = {
   positive: {
     label: "Positive",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--chart-2))",
   },
   negative: {
     label: "Negative",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(var(--chart-4))",
   },
   neutral: {
     label: "Neutral",
@@ -44,19 +38,19 @@ const chartConfig = {
   },
   news: {
     label: "News",
-    color: "hsl(var(--chart-4))",
+    color: "hsl(var(--chart-1))",
   },
   twitter: {
     label: "Twitter",
-    color: "hsl(var(--chart-5))",
+    color: "hsl(var(--chart-2))",
   },
   tiktok: {
     label: "Tiktok",
-    color: "hsl(var(--chart-6))",
+    color: "hsl(var(--chart-3))",
   },
   youtube: {
     label: "Youtube",
-    color: "hsl(var(--chart-7))",
+    color: "hsl(var(--chart-4))",
   }
    
 } satisfies ChartConfig

@@ -36,11 +36,11 @@ const chartConfig = {
   },
   positive: {
     label: "Positive",
-    color: "hsl(var(--chart-1))", 
+    color: "hsl(var(--chart-2))", 
   },
   negative: {
     label: "Negative",
-    color: "hsl(var(--chart-2))", 
+    color: "hsl(var(--chart-4))", 
   },
   neutral: {
     label: "Neutral",
@@ -136,7 +136,7 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
                 <stop
                   offset="5%"
                   stopColor="var(--color-positive)"
-                  stopOpacity={0.8}
+                  stopOpacity={0.6}
                 />
                 <stop
                   offset="95%"
@@ -148,7 +148,7 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
                 <stop
                   offset="5%"
                   stopColor="var(--color-negative)"
-                  stopOpacity={0.8}
+                  stopOpacity={0.6}
                 />
                 <stop
                   offset="95%"
@@ -160,7 +160,7 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
                 <stop
                   offset="5%"
                   stopColor="var(--color-neutral)"
-                  stopOpacity={0.8}
+                  stopOpacity={0.6}
                 />
                 <stop
                   offset="95%"

@@ -16,7 +16,7 @@ export function WordCloudCard({
   return (
     <Card className="h-full card[--color-card]">
       <CardHeader>
-        <CardTitle className="text-lg font-medium text-white">
+        <CardTitle className="text-lg font-medium">
           Top Keywords WordCloud
         </CardTitle>
       </CardHeader>
@@ -32,7 +32,7 @@ export function WordCloudCard({
           rotate={() => 0}
           padding={5}
           fill={(d, i) => {
-            const colors = ["#1d4ed8", "#3b82f6" ,"#60a5fa", "#e2e8f0"];
+            const colors = ["#F8FAFC", "#CBD5E1", "#64748B", ];
             return colors[i % colors.length];
           }}
         />
