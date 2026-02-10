@@ -10,6 +10,7 @@ import { AppSidebar } from "@/src/components/app-sidebar";
 import { ThemeProvider } from "@/src/components/theme-provider";
 import { ModeToggle } from "@/src/components/mode-togle";
 import { InputInline } from "@/src/components/search";
+import { SiteHeader } from "@/src/components/site-header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,15 +47,10 @@ export default function RootLayout({
             <SidebarProvider defaultOpen={true}>
               <AppSidebar />
               <SidebarInset>
-                <div className="ml-auto top-4 right-4">
+                <div className="ml-auto absolute top-4 right-4 z-[60]">
                   <ModeToggle />
                 </div>
-                <header className="sticky top-0 z-50 flex h-10 items-center gap-2 bg-background px-5">
-                  <SidebarTrigger className="-ml-1" />
-                  <div className="mx-auto p-2">
-                   
-                  </div>
-                </header>
+                <SiteHeader />
                 <main className="flex-1 overflow-y-auto">{children}</main>
               </SidebarInset>
             </SidebarProvider>

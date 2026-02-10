@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
     print("Menyiapkan AI Engine (mohon tunggu sebentar)...", flush=True)
     try:
-        from core.analyzer_simple import sentimentAnalyzer
+        from core.analyzer import sentimentAnalyzer
         analyzer = sentimentAnalyzer()
         print("AI Engine siap melayani request!", flush=True)
     except Exception as e:

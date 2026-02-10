@@ -4,13 +4,9 @@ import React from "react";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-1 items-center justify-center p-4">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Sentiment App</h1>
-        <p className="text-muted-foreground">User landing page design coming soon...</p>
-        <div>
-           <InputInline />
-        </div>
+    <div className="flex flex-auto flex-col item-center justify-center ">
+      <div className="flex flex-row items-center justify-start p-5 text-lg">
+        <p className="font bold">Home Section</p>
       </div>
     </div>
   );

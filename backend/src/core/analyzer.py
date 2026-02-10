@@ -7,7 +7,7 @@ from scrapping.tiktok_scraper import TiktokScrapper
 from core.preprocessor import DataCleaner
 from database.database_supabase import SentimentDatabase
 from transformers import pipeline
-from datetime import datetime
+from datetime import datetime, timedelta
 import dateparser
 import torch
 
@@ -116,7 +116,7 @@ class sentimentAnalyzer:
                 
                 futures = [loop.run_in_executor(executor, t[0], *t[1:]) for t in tasks]
                 
-                for i, future in enumerate(asyncio.as_completed(Hyundai Stargazerfutures)):
+                for i, future in enumerate(asyncio.as_completed(futures)):
                     try:
                         result = await future
                         platform = "Unknown"
