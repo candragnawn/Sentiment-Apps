@@ -38,7 +38,7 @@ const chartConfig = {
   },
   news: {
     label: "News",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--chart-2))",
   },
   twitter: {
     label: "Twitter",

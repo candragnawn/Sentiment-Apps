@@ -209,14 +209,14 @@ export function ChartAreaInteractive({ data }: { data: any[] }) {
             <Area
               dataKey="neutral"
               type="natural"
-              fill="url(#fillNeutral)"
+              fill="url(#fillNegative)"
               stroke="var(--color-neutral)"
               stackId="a"
             />
             <Area
               dataKey="positive"
               type="natural"
-              fill="url(#fillPositive)"
+              fill="url(#fillNegative)"
               stroke="var(--color-positive)"
               stackId="a"
             />

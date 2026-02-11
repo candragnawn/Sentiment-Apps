@@ -11,7 +11,7 @@ export default function HomePage() {
 
         <div className="w-full max-w-2xl flex flex-col items-center py-5 px-10 bg-card/50 backdrop-blur-sm rounded-3xl border border-border/50 shadow-xl transition-all hover:shadow-2xl">
           <p className="text-sm font-medium text-muted-foreground mb-6 uppercase tracking-widest">
-            Analyze New Sentiment
+            Input Keyword
           </p>
           <div className="w-full flex justify-center">
             <InputInline />
