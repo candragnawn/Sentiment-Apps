@@ -171,7 +171,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="md:col-span-8">
-         <ChartAreaInteractive data={chartData} />
+          <WordCloudCard data={wordCloudData} />
         </div>
       </div>
 
