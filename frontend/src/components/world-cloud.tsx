@@ -32,7 +32,7 @@ export function WordCloudCard({
           rotate={() => 0}
           padding={5}
           fill={(d, i) => {
-            const colors = ["#F8FAFC", "#CBD5E1", "#64748B", ];
+            const colors = ["#CBD5E1", "#64748B", ];
             return colors[i % colors.length];
           }}
         />

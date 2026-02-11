@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Separator } from "@/src/components/ui/separator";
 import { SidebarTrigger } from "@/src/components/ui/sidebar";
 import {
@@ -20,7 +20,13 @@ const routeConfig: Record<string, string> = {
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const currentTitle = routeConfig[pathname] || "Sentiment App";
+  const searchParams = useSearchParams();
+  const keyword = searchParams.get("keyword");
+  
+  let currentTitle = routeConfig[pathname] || "Sentiment App";
+  if (pathname === "/dashboard" && keyword) {
+    currentTitle = `Dashboard: ${keyword}`;
+  }
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between  bg-card px-4 sticky top-0 z-50">

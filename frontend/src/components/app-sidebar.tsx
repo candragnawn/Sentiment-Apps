@@ -13,6 +13,7 @@ import {
 
 import { NavDocuments } from "@/src/components/nav-documents";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { NavMain } from "@/src/components/nav-main";
 import { NavSecondary } from "@/src/components/nav-secondary";
 import { NavUser } from "@/src/components/nav-user";
@@ -26,38 +27,41 @@ import {
   SidebarMenuItem,
 } from "@/src/components/ui/sidebar";
 
-const data = {
-  user: {
-    name: "Pakelpo",
-    email: "m@example.com",
-    avatar: "",
-  },
-  navMain: [
-    {
-      title: "Home",
-      url: "/",
-      icon: HouseHeartIcon,
-    },
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: "History",
-      url: "/history",
-      icon: HistoryIcon,
-    },
-  ],
-  documents: [],
-  navSecondary: [
-    { title: "Settings", url: "#", icon: SettingsIcon },
-    { title: "Get Help", url: "#", icon: HelpCircleIcon },
-    { title: "Search", url: "/", icon: SearchIcon },
-  ],
-};
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const searchParams = useSearchParams();
+  const keyword = searchParams.get("keyword") || "";
+
+  const data = {
+    user: {
+      name: "Pakelpo",
+      email: "m@example.com",
+      avatar: "",
+    },
+    navMain: [
+      {
+        title: "Home",
+        url: "/",
+        icon: HouseHeartIcon,
+      },
+      {
+        title: "Dashboard",
+        url: keyword ? `/dashboard?keyword=${encodeURIComponent(keyword)}` : "/dashboard",
+        icon: LayoutDashboardIcon,
+      },
+      {
+        title: "History",
+        url: "/history",
+        icon: HistoryIcon,
+      },
+    ],
+    documents: [],
+    navSecondary: [
+      { title: "Settings", url: "#", icon: SettingsIcon },
+      { title: "Get Help", url: "#", icon: HelpCircleIcon },
+      { title: "Search", url: "/", icon: SearchIcon },
+    ],
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

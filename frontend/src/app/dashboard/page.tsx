@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { SectionCards } from "@/src/components/section-cards";
 import { useSearchParams } from "next/navigation";
@@ -25,7 +25,7 @@ const WordCloudCard = dynamic(
   { ssr: false },
 );
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [tableData, setTableData] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({
     total: 0,
@@ -142,10 +142,18 @@ export default function DashboardPage() {
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
       <div className="flex flex-col gap-2">
         <h1 className="text-xl font-bold tracking-tight">
-          Sentimen dari <span className="text-primary">{keyword}</span>
+          {keyword ? (
+            <>
+              Analisis Sentimen dari{" "}
+              <span className="text-primary font-bold">{keyword}</span>
+            </>
+          ) : (
+            "Analisis Sentimen Terkini"
+          )}
         </h1>
         <p className="text-muted-foreground">
-          Ringkasan analisis sentimen lintas {keyword}platform secara real-time.
+          Ringkasan analisis sentimen lintas platform secara real-time
+          {keyword ? ` untuk "${keyword}"` : "."}
         </p>
       </div>
 
@@ -188,5 +196,17 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-1 items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
