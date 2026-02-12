@@ -45,35 +45,38 @@ function DashboardContent() {
     try {
       const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
 
-      const [statsRes, chartRes, tableRes, platformRes] = await Promise.all([
-        fetch(`http://127.0.0.1:8000/api/sentiment/stats${query}`, {
-          cache: "no-store",
-        }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, {
-          cache: "no-store",
-        }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/list${query}${query ? '&' : '?'}page_size=500`, {
-          cache: "no-store",
-        }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/platform-stats${query}`, {
-          cache: "no-store",
-        }),
+      // 1. Fetch Critical Stats & Charts (Fast)
+      const [statsRes, chartRes, platformRes] = await Promise.all([
+        fetch(`http://127.0.0.1:8000/api/sentiment/stats${query}`, { cache: "no-store" }),
+        fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, { cache: "no-store" }),
+        fetch(`http://127.0.0.1:8000/api/sentiment/platform-stats${query}`, { cache: "no-store" }),
       ]);
 
-      const [statsJson, chartJson, tableJson, platformJson] = await Promise.all([
+      const [statsJson, chartJson, platformJson] = await Promise.all([
         statsRes.json(),
         chartRes.json(),
-        tableRes.json(),
         platformRes.json(),
       ]);
 
       setStats(statsJson);
       setChartData(chartJson);
-      setTableData(Array.isArray(tableJson) ? tableJson : tableJson.data || []);
       setPlatformData(platformJson);
+      setLoading(false); // Stop main loading spinner here
+
+      // 2. Fetch Heavy Table Data (Background)
+      try {
+        const tableRes = await fetch(
+          `http://127.0.0.1:8000/api/sentiment/list${query}${query ? '&' : '?'}page_size=500`, 
+          { cache: "no-store" }
+        );
+        const tableJson = await tableRes.json();
+        setTableData(Array.isArray(tableJson) ? tableJson : tableJson.data || []);
+      } catch (tableError) {
+        console.error("Failed to load table data", tableError);
+      }
+
     } catch (error) {
       console.error("Failed to load dashboard data", error);
-    } finally {
       setLoading(false);
     }
   }, [keyword]);
@@ -135,13 +138,13 @@ function DashboardContent() {
     return Array.from(wordMap.entries())
       .map(([text, value]) => ({ text, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 350);
+      .slice(0, 100);
   }, [tableData]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">
       <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-bold tracking-tight">
+        <h1 className="text-xl font-medium tracking-tight">
           {keyword ? (
             <>
               Analisis Sentimen dari{" "}
