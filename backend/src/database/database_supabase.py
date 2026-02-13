@@ -275,3 +275,67 @@ class SentimentDatabase:
         except Exception as e:
             print(f"Error fetching chart: {e}")
             return []
+
+    def fetch_search_history(self):
+        try:
+            # Fetch all data to aggregate in Python (Supabase free tier limitation on complex GROUP BY queries via API)
+            # For production with many rows, this should be a stored procedure or proper SQL view
+            params = {"select": "keyword,label,created_at,platform"}
+            result = self._get("sentiments", params)
+            data = result['data']
+            
+            history = {}
+            
+            for item in data:
+                keyword = item.get('keyword')
+                if not keyword:
+                    continue
+                    
+                if keyword not in history:
+                    history[keyword] = {
+                        "keyword": keyword,
+                        "total": 0,
+                        "positive": 0,
+                        "negative": 0,
+                        "neutral": 0,
+                        "platforms": set(),
+                        "last_updated": item.get('created_at')
+                    }
+                
+                # Update counts
+                label = item.get('label', '').lower()
+                history[keyword]["total"] += 1
+                if label in history[keyword]:
+                    history[keyword][label] += 1
+                
+                # Update platform
+                if item.get('platform'):
+                    history[keyword]["platforms"].add(item.get('platform'))
+                
+                # Update last_updated if newer
+                curr_date = item.get('created_at')
+                if curr_date and curr_date > history[keyword]["last_updated"]:
+                    history[keyword]["last_updated"] = curr_date
+
+            # Calculate percentages and format output
+            output = []
+            for k, v in history.items():
+                total = v["total"]
+                if total > 0:
+                    v["positive_pct"] = round((v["positive"] / total) * 100, 1)
+                    v["negative_pct"] = round((v["negative"] / total) * 100, 1)
+                    v["neutral_pct"] = round((v["neutral"] / total) * 100, 1)
+                else:
+                    v["positive_pct"] = 0
+                    v["negative_pct"] = 0
+                    v["neutral_pct"] = 0
+                
+                v["platforms"] = list(v["platforms"]) # Convert set to list for JSON serialization
+                output.append(v)
+            
+            # Sort by last_updated desc
+            return sorted(output, key=lambda x: x['last_updated'], reverse=True)
+            
+        except Exception as e:
+            print(f"Error fetching history: {e}")
+            return []

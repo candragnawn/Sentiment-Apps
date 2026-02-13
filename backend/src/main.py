@@ -94,6 +94,12 @@ async def get_chart(days: int = Query(30), keyword: Optional[str] = None, group_
         return []
     return db.fetch_chart_data(days, keyword, group_by)
 
+@app.get('/api/sentiment/history')
+async def get_history():
+    if db is None:
+        return []
+    return db.fetch_search_history()
+
 @app.get("/analyze")
 async def start_analysis(
     keyword: str, 
