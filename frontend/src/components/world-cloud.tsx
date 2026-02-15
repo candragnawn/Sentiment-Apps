@@ -23,14 +23,14 @@ export function WordCloudCard({
       <CardContent>
         <WorldCloud
           data={data}
-          width={2500}
-          height={600}
+          width={1800}
+          height={500}
           font="inter"
           fontWeight="bold"
-          fontSize={(word) => Math.log2(word.value + 1) * 20}
-          spiral="rectangular"
+          fontSize={(word) => Math.log2(word.value + 1) * 22 + 10}
+          spiral="archimedean"
           rotate={() => 0}
-          padding={5}
+          padding={2}
           fill={(d, i) => {
             const colors = ["#CBD5E1", "#64748B", ];
             return colors[i % colors.length];

@@ -1,18 +1,15 @@
 "use client";
-import { useMemo, useState, useEffect, useCallback, Suspense } from "react";
+import { useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { SectionCards } from "@/src/components/section-cards";
 import { useSearchParams } from "next/navigation";
+import { useDashboardData } from "@/src/hooks/use-dashboard-data"; // Import the hook
 
 const ChartAreaInteractive = dynamic(
   () =>
     import("@/src/components/chart-area-interactive").then(
       (mod) => mod.ChartAreaInteractive,
     ),
-  { ssr: false },
-);
-const DataTable = dynamic(
-  () => import("@/src/components/data-table").then((mod) => mod.DataTable),
   { ssr: false },
 );
 const ChartPieDonut = dynamic(
@@ -25,96 +22,16 @@ const WordCloudCard = dynamic(
   { ssr: false },
 );
 
+// Helper function safely exported
 function DashboardContent() {
-  const [tableData, setTableData] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>({
-    total: 0,
-    positive: 0,
-    negative: 0,
-    neutral: 0,
-  });
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [platformData, setPlatformData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const searchParams = useSearchParams();
   const keyword = searchParams.get("keyword") || "";
-
-  const loadDashboardData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
-
-      // 1. Fetch Critical Stats & Charts (Fast)
-      const [statsRes, chartRes, platformRes] = await Promise.all([
-        fetch(`http://127.0.0.1:8000/api/sentiment/stats${query}`, { cache: "no-store" }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/chart${query}`, { cache: "no-store" }),
-        fetch(`http://127.0.0.1:8000/api/sentiment/platform-stats${query}`, { cache: "no-store" }),
-      ]);
-
-      const [statsJson, chartJson, platformJson] = await Promise.all([
-        statsRes.json(),
-        chartRes.json(),
-        platformRes.json(),
-      ]);
-
-      setStats(statsJson);
-      setChartData(chartJson);
-      setPlatformData(platformJson);
-      setLoading(false); // Stop main loading spinner here
-
-      // 2. Fetch Heavy Table Data (Background)
-      try {
-        const tableRes = await fetch(
-          `http://127.0.0.1:8000/api/sentiment/list${query}${query ? '&' : '?'}page_size=500`, 
-          { cache: "no-store" }
-        );
-        const tableJson = await tableRes.json();
-        setTableData(Array.isArray(tableJson) ? tableJson : tableJson.data || []);
-      } catch (tableError) {
-        console.error("Failed to load table data", tableError);
-      }
-
-    } catch (error) {
-      console.error("Failed to load dashboard data", error);
-      setLoading(false);
-    }
-  }, [keyword]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
-  const positivePercent =
-    stats.total > 0 ? ((stats.positive / stats.total) * 100).toFixed(1) : 0;
-  const negativePercent =
-    stats.total > 0 ? ((stats.negative / stats.total) * 100).toFixed(1) : 0;
-
-  const sentimentSummary =
-    stats.positive > stats.negative
-      ? `Dominan sentimen positif (${positivePercent}%)`
-      : `Dominan sentimen negatif (${negativePercent}%)`;
-
-  const sentimentData = useMemo(
-    () => [
-      {
-        label: "positive",
-        value: stats.positive,
-        fill: "var(--color-positive)",
-      },
-      {
-        label: "negative",
-        value: stats.negative,
-        fill: "var(--color-negative)",
-      },
-      { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)" },
-    ],
-    [stats],
-  );
-
+  
+  const { stats, chartData, platformData, tableData, isLoading } = useDashboardData(keyword);
+  
   const platformDistribution = useMemo(() => {
     if (platformData && platformData.length > 0) {
-      return platformData.map(item => ({
+      return platformData.map((item: any) => ({
         ...item,
         label: item.label.toLowerCase()
       }));
@@ -122,14 +39,14 @@ function DashboardContent() {
     const platforms = ["news", "twitter", "tiktok", "youtube"];
     return platforms.map((p) => ({
       label: p,
-      value: tableData.filter((i) => i.platform?.toLowerCase().trim() === p).length,
+      value: tableData.filter((i: any) => i.platform?.toLowerCase().trim() === p).length,
       fill: `var(--color-${p})`,
     }));
   }, [platformData, tableData]);
 
   const wordCloudData = useMemo(() => {
     const wordMap = new Map<string, number>();
-    tableData.forEach((item) => {
+    tableData.forEach((item: any) => {
       item.top_keyword?.forEach((word: string) => {
         wordMap.set(word, (wordMap.get(word) || 0) + 1);
       });
@@ -138,8 +55,40 @@ function DashboardContent() {
     return Array.from(wordMap.entries())
       .map(([text, value]) => ({ text, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 100);
+      .slice(0, 50);
   }, [tableData]);
+
+  const positivePercent =
+    stats.total > 0 ? ((stats.positive / stats.total) * 100).toFixed(1) : "0";
+  const negativePercent =
+    stats.total > 0 ? ((stats.negative / stats.total) * 100).toFixed(1) : "0";
+
+  const sentimentSummary =
+    stats.positive > stats.negative
+      ? `Dominan sentimen positif (${positivePercent}%)`
+      : `Dominan sentimen negatif (${negativePercent}%)`;
+
+  const sentimentData = [
+    {
+      label: "positive",
+      value: stats.positive,
+      fill: "var(--color-positive)",
+    },
+    {
+      label: "negative",
+      value: stats.negative,
+      fill: "var(--color-negative)",
+    },
+    { label: "neutral", value: stats.neutral, fill: "var(--color-neutral)" },
+  ];
+
+  if (isLoading && !stats.total) {
+     return (
+      <div className="flex flex-1 items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pt-0">

@@ -3,6 +3,7 @@ import dateparser
 import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
+from functools import lru_cache
 
 class SentimentDatabase:
     
@@ -276,6 +277,7 @@ class SentimentDatabase:
             print(f"Error fetching chart: {e}")
             return []
 
+    @lru_cache(maxsize=1)
     def fetch_search_history(self):
         try:
             # Fetch all data to aggregate in Python (Supabase free tier limitation on complex GROUP BY queries via API)
@@ -338,4 +340,29 @@ class SentimentDatabase:
             
         except Exception as e:
             print(f"Error fetching history: {e}")
+    @lru_cache(maxsize=1)
+    def fetch_word_cloud(self, keyword=None):
+        try:
+            params = {"select": "top_keyword", "limit": "2000", "order": "created_at.desc"}
+            if keyword:
+                params["keyword"] = f"eq.{keyword}"
+            
+            result = self._get("sentiments", params)
+            data = result['data']
+            
+            word_counts = {}
+            for item in data:
+                keywords = item.get('top_keyword')
+                if keywords and isinstance(keywords, list):
+                    for word in keywords:
+                        if word:
+                            word_counts[word] = word_counts.get(word, 0) + 1
+            
+            # Format for frontend: { text: string, value: number }
+            formatted = [{"text": k, "value": v} for k, v in word_counts.items()]
+            
+            # Sort by value desc and take top 1000
+            return sorted(formatted, key=lambda x: x['value'], reverse=True)[:1000]
+        except Exception as e:
+            print(f"Error fetching word cloud: {e}")
             return []

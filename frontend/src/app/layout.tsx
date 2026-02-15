@@ -10,6 +10,7 @@ import { AppSidebar } from "@/src/components/app-sidebar";
 import { ThemeProvider } from "@/src/components/theme-provider";
 import { InputInline } from "@/src/components/search";
 import { SiteHeader } from "@/src/components/site-header";
+import ReactQueryProvider from "@/src/lib/react-query-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,21 +37,23 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <head />
         <body>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {" "}
-            <SidebarProvider defaultOpen={true}>
-              <AppSidebar />
-              <SidebarInset>
-                <SiteHeader />
-                <main className="flex-1 overflow-y-auto">{children}</main>
-              </SidebarInset>
-            </SidebarProvider>
-          </ThemeProvider>
+          <ReactQueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {" "}
+              <SidebarProvider defaultOpen={true}>
+                <AppSidebar />
+                <SidebarInset>
+                  <SiteHeader />
+                  <main className="flex-1 overflow-y-auto">{children}</main>
+                </SidebarInset>
+              </SidebarProvider>
+            </ThemeProvider>
+          </ReactQueryProvider>
         </body>
       </html>
     </>
